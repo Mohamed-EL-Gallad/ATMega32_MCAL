@@ -1,8 +1,9 @@
 /*
  * TimersConfig.h
  *
- *  Created on: ٠٥‏/٠٢‏/٢٠٢١
- *      Author: spider
+ *  Created on: 15/03/2021
+ *  Author: Mohamed_EL_Gallad
+ *  Description:
  */
 
 #ifndef TIMERSCONFIG_H_
@@ -33,16 +34,16 @@
  -----------------------------------------------------------------------------------------------------------*/
 
  /*----------------*----------------*----------------*--------------------------*---------------------------*
-  * OPERATION      |OC0 MODE0       |OC0 MODE1       |OC0 MODE2                 |OC0 MODE3                  |
+  | OPERATION      |OC0 MODE0       |OC0 MODE1       |OC0 MODE2                 |OC0 MODE3                  |
   * ---------------*----------------*----------------*--------------------------*---------------------------*
-  * NORMAL   MODE  |PIN DICONNECTED |TOGGLE ON MATCH |CLEAR ON MATCH            |SET ON MATCH               |
+  | NORMAL   MODE  |PIN DICONNECTED |TOGGLE ON MATCH |CLEAR ON MATCH            |SET ON MATCH               |
   * ---------------*----------------*----------------*--------------------------*---------------------------*
   * PHASE CORRECT  |PIN DICONNECTED |RESERVED        |CLEAR ON MATCH UPCOUNTING |SET ON MATCH UPCOUNTING    |
-  *                |                |                |SET ON MATCH DOWNCOUNTING |CLEAR ON MATCH DOWNCOUNTING|
+  |                |                |                |SET ON MATCH DOWNCOUNTING |CLEAR ON MATCH DOWNCOUNTING|
   * ---------------*----------------*----------------*--------------------------*---------------------------*
-  * CTC            |PIN DICONNECTED |TOGGLE ON MATCH |CLEAR ON MATCH            |SET ON MATCH               |
+  | CTC            |PIN DICONNECTED |TOGGLE ON MATCH |CLEAR ON MATCH            |SET ON MATCH               |
   * ---------------*----------------*----------------*--------------------------*---------------------------*
-  * FAST PWM       |PIN DICONNECTED |RESERVED        |CLEAR ON MATCH,SET AT TOP |SET ON MATCH,CLEAR AT TOP  |
+  | FAST PWM       |PIN DICONNECTED |RESERVED        |CLEAR ON MATCH,SET AT TOP |SET ON MATCH,CLEAR AT TOP  |
   * ---------------*----------------*----------------*--------------------------*---------------------------*/
 #define OC0_MODE0   0
 #define OC0_MODE1   1
@@ -59,21 +60,21 @@
 *while in the other modes their values will be updated when the counter reaches top value
 */
 /*--------------------------*----------------*
- *         MODE             |  TOP VALUE     |
+ |         MODE             |  TOP VALUE     |
  * -------------------------*----------------*
- * T1_PHASECORR_MODE1       | 8-BIT, 0x00FF  |
+ | T1_PHASECORR_MODE1       | 8-BIT, 0x00FF  |
  * -------------------------*----------------*
- * T1_PHASECORR_MODE2       | 9-BIT, 0x01FF  |
+ | T1_PHASECORR_MODE2       | 9-BIT, 0x01FF  |
  * -------------------------*----------------*
- * T1_PHASECORR_MODE3       | 10-BIT, 0x03FF |
+ | T1_PHASECORR_MODE3       | 10-BIT, 0x03FF |
  * -------------------------*----------------*
- * T1_PHASECORR_MODE4       | ICR1           |
+ | T1_PHASECORR_MODE4       | ICR1           |
  * -------------------------*----------------*
- * T1_PHASECORR_MODE5       | OCR1A          |
+ | T1_PHASECORR_MODE5       | OCR1A          |
  * -------------------------*----------------*
- * T1_PHASE_FREQ_CORR_MODE1 | ICR1           |
+ | T1_PHASE_FREQ_CORR_MODE1 | ICR1           |
  * -------------------------*----------------*
- * T1_PHASE_FREQ_CORR_MODE2 | OCR1A          |
+ | T1_PHASE_FREQ_CORR_MODE2 | OCR1A          |
  * -------------------------*----------------*/
 #define T1_PHASECORR_MODE1        (u8)1
 #define T1_PHASECORR_MODE2        (u8)2
@@ -88,17 +89,17 @@
 
 
 /*-------------------*------*---------*
- *         MODE      |  TOP VALUE     |
+ |         MODE      |  TOP VALUE     |
  * ------------------*----------------*
- * T1_FASTPWM_MODE1  | 8-BIT, 0x00FF  |
+ | T1_FASTPWM_MODE1  | 8-BIT, 0x00FF  |
  * ------------------*----------------*
- * T1_FASTPWM_MODE2  | 9-BIT, 0x01FF  |
+ | T1_FASTPWM_MODE2  | 9-BIT, 0x01FF  |
  * ------------------*----------------*
- * T1_FASTPWM_MODE3  | 10-BIT, 0x03FF |
+ | T1_FASTPWM_MODE3  | 10-BIT, 0x03FF |
  * ------------------*----------------*
- * T1_FASTPWM_MODE4  | ICR1           |
+ | T1_FASTPWM_MODE4  | ICR1           |
  * ------------------*----------------*
- * T1_FASTPWM_MODE5  | OCR1A          |
+ | T1_FASTPWM_MODE5  | OCR1A          |
  * ------------------*----------------*/
 #define T1_FASTPWM_MODE1   (u8)1
 #define T1_FASTPWM_MODE2   (u8)2
@@ -112,51 +113,55 @@
 /***********************************COMPARE MATCH MODE SETTING**************************************/
 
  /*----------------*----------------*----------------*--------------------------*----------------------------*
-  * OPERATION      |OC1A MODE0      |OC1A MODE1      |OC1A MODE2                |OC1A MODE3                  |
+  | OPERATION      |OC1A MODE0      |OC1A MODE1      |OC1A MODE2                |OC1A MODE3                  |
   * ---------------*----------------*----------------*--------------------------*----------------------------*
-  * NORMAL   MODE  |PIN DICONNECTED |TOGGLE ON MATCH |CLEAR ON MATCH            |SET ON MATCH                |
+  | NORMAL   MODE  |PIN DICONNECTED |TOGGLE ON MATCH |CLEAR ON MATCH            |SET ON MATCH                |
   * ---------------*----------------*----------------*--------------------------*----------------------------*
-  * PHASE CORRECT  |PIN DICONNECTED |TOGGLE ON MATCH |CLEAR ON MATCH UPCOUNTING |SET ON MATCH UPCOUNTING     |
-  * FREQ  CORRECT  |                |                |SET ON MATCH DOUWNCOUNTING|CLEAR ON MATCH DOUWNCOUNTING|                                                  |
+  | PHASE CORRECT  |PIN DICONNECTED |TOGGLE ON MATCH |CLEAR ON MATCH UPCOUNTING |SET ON MATCH UPCOUNTING     |
+  | FREQ  CORRECT  |                |                |SET ON MATCH DOUWNCOUNTING|CLEAR ON MATCH DOUWNCOUNTING|                                                  |
   * ---------------*----------------*----------------*--------------------------*----------------------------*
-  * CTC            |PIN DICONNECTED |TOGGLE ON MATCH |CLEAR ON MATCH            |SET ON MATCH                |
+  | CTC            |PIN DICONNECTED |TOGGLE ON MATCH |CLEAR ON MATCH            |SET ON MATCH                |
   * ---------------*----------------*----------------*--------------------------*----------------------------*
-  * FAST PWM       |PIN DICONNECTED |TOGGLE ON MATCH |CLEAR ON MATCH,SET AT TOP |SET ON MATCH,CLEAR AT TOP   |
+  | FAST PWM       |PIN DICONNECTED |TOGGLE ON MATCH |CLEAR ON MATCH,SET AT TOP |SET ON MATCH,CLEAR AT TOP   |
   * ---------------*----------------*----------------*--------------------------*----------------------------*/
-#define OC1A_MODE0  (u8)0
-#define OC1A_MODE1  (u8)1
-#define OC1A_MODE2  (u8)2
-#define OC1A_MODE3  (u8)3
+#define OC1A_MODE0  0
+#define OC1A_MODE1  1
+#define OC1A_MODE2  2
+#define OC1A_MODE3  3
 
+#define OC1A_OPMODE OC1A_MODE1
 
  /*----------------*----------------*----------------*--------------------------*----------------------------*
-  * OPERATION      |OC1B MODE0      |OC1B MODE1      |OC1B MODE2                |OC1B MODE3                  |
+  | OPERATION      |OC1B MODE0      |OC1B MODE1      |OC1B MODE2                |OC1B MODE3                  |
   * ---------------*----------------*----------------*--------------------------*----------------------------*
-  * NORMAL   MODE  |PIN DICONNECTED |TOGGLE ON MATCH |CLEAR ON MATCH            |SET ON MATCH                |
+  | NORMAL   MODE  |PIN DICONNECTED |TOGGLE ON MATCH |CLEAR ON MATCH            |SET ON MATCH                |
   * ---------------*----------------*----------------*--------------------------*----------------------------*
   * PHASE CORRECT  |PIN DICONNECTED |PIN DICONNECTED |CLEAR ON MATCH UPCOUNTING |SET ON MATCH UPCOUNTING     |
-  * FREQ  CORRECT  |                |                |SET ON MATCH DOUWNCOUNTING|CLEAR ON MATCH DOUWNCOUNTING|                                                  |
+  | FREQ  CORRECT  |                |                |SET ON MATCH DOUWNCOUNTING|CLEAR ON MATCH DOUWNCOUNTING|                                                  |
   * ---------------*----------------*----------------*--------------------------*----------------------------*
-  * CTC            |PIN DICONNECTED |TOGGLE ON MATCH |CLEAR ON MATCH            |SET ON MATCH                |
+  | CTC            |PIN DICONNECTED |TOGGLE ON MATCH |CLEAR ON MATCH            |SET ON MATCH                |
   * ---------------*----------------*----------------*--------------------------*----------------------------*
-  * FAST PWM       |PIN DICONNECTED |PIN DICONNECTED  |CLEAR ON MATCH,SET AT TOP |SET ON MATCH,CLEAR AT TOP   |
+  | FAST PWM       |PIN DICONNECTED |PIN DICONNECTED  |CLEAR ON MATCH,SET AT TOP |SET ON MATCH,CLEAR AT TOP   |
   * ---------------*----------------*----------------*--------------------------*----------------------------*/
-#define OC1B_MODE0  (u8)0
-#define OC1B_MODE1  (u8)1
-#define OC1B_MODE2  (u8)2
-#define OC1B_MODE3  (u8)3
+#define OC1B_MODE0  0
+#define OC1B_MODE1  1
+#define OC1B_MODE2  2
+#define OC1B_MODE3  3
+
+#define OC1B_OPMODE OC1B_MODE1
+
 /*--------------------*-----------*
- *        MODE        | TOP VALUE |
+ |        MODE        | TOP VALUE |
  * -------------------*-----------*
- * T1_COMPMATCH_MODE1 |  OCR1A    |
+ | T1_COMPMATCH_MODE1 |  OCR1A    |
  * -------------------*-----------*
- * TI_COMPMATCH_MODE2 |  ICR1     |
+ | TI_COMPMATCH_MODE2 |  ICR1     |
  * -------------------*-----------*/
 
 #define T1_COMPMATCH_MODE1   0
 #define T1_COMPMATCH_MODE2   1
 
-#define T1_COMPMATCH_OPMODE  T1_COMPMATCH_MODE1
+#define T1_COMPMATCH_OPMODE  T1_COMPMATCH_MODE2
 
 
 
@@ -166,6 +171,8 @@
 
 #define TRIGGER_SRC_ICP1         0
 #define TRIGGER_SRC_ACO          1
+
+#define TRIGGER_SOURCE TRIGGER_SRC_ICP1
 
 //user has to define the timer1 operating frequency either internal or external clock is being used
 #define Timer1_OP_CLK     187500 // F_CPU/ Prescaler OR the value of the external CLK on T1

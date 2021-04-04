@@ -1,7 +1,7 @@
 /*
  * Timer0.c
  *
- * Created on: ٠٨‏/٠١‏/٢٠٢١
+ * Created on: 20/03/2021
  * Author: Mohamed_EL_Gallad
  * this C file contains the timer0 functions implementation
  */
