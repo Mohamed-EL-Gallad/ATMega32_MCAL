@@ -298,6 +298,18 @@ void Timer1_InputCaptureInit(void);
 void Timer1_ICUGetEventData(f32 *TonTime, f32 *DutyCycle, u16 *Freq);
 
 
+
+void Timer1_FastPWMInit(void);
+
+
+void Timer1_PhaseCorrPWMInit(void);
+
+
+void Timer1_CHA_SetPWM_DutyCycle(u8 DutyCyclePercentage);
+
+void Timer1_CHB_SetPWM_DutyCycle(u8 DutyCyclePercentage);
+
+
 /**
  * RETURN      :VOID.
  * PARAMETER   :VOID.
@@ -319,5 +331,7 @@ void Timer1_Enable(void);
  * the timer will be enabled when Timer1_ICUGetEventData() is being provoked and will be disabled after the function's execution
  */
 void Timer1_Stop(void);
+
+
 
 #endif /* TIMERS_H_ */

@@ -18,16 +18,17 @@
 
 
 volatile static u32 ICU_TonTicks=0,ICU_ToffTicks=0;
-volatile u16 T1_OVF_Counter;
+volatile        u16 T1_OVF_Counter;
 volatile static u8 ICU_EdgeFlag=0;
-
+         static u8 T1_DutyCycle=0;
 
 static void      (*Timer1_OverFlowIntFunc)();
 static void (*Timer1_CHA_CompMatchIntFunc)();
 static void (*Timer1_CHB_CompMatchIntFunc)();
 
-static void T1_OC1AB_NonPWMCtrl(void);
-static void T1_OVFcounterFunc(void);
+static void T1_OC1A_OC1B_OutputCTRL(void);
+static void T1_OVFcounterFunc      (void);
+
 
 /**
  * RETURN   : VOID
@@ -40,7 +41,7 @@ void Timer1_NormalModeInit()
 {
 	TCCR1A &=~((1<<0) | (1<<1)); // WGM10=0 WGM11=0
 	TCCR1B &=~((1<<3) | (1<<4)); // WGM12=0 WGM13=0
-	T1_OC1AB_NonPWMCtrl();
+	T1_OC1A_OC1B_OutputCTRL();
 }
 
 
@@ -122,7 +123,7 @@ void Timer1_CTCModeInit()
 		//noop
 		break;
 	}
-	T1_OC1AB_NonPWMCtrl(); //set the operation mode of OC1A & OC1B pins
+	T1_OC1A_OC1B_OutputCTRL(); //set the operation mode of OC1A & OC1B pins
 }
 
 
@@ -350,6 +351,125 @@ void Timer1_ICUGetEventData(f32 *TonTime , f32 *DutyCycle ,u16 *Freq)
 }
 
 
+void Timer1_FastPWMInit(){
+	TCCR1A &=~((1<<3) | (1<<2)); //reset Force Output Compare for Channel A & Channel B
+
+	//setting the desired fast PWM operation mode
+    #if   T1_FASTPWM_OPMODE ==T1_FASTPWM_MODE1 //8bits mode ,top value is 0x00FF
+	TCCR1A |= (1<<0); //WGM10=1
+	TCCR1A &=~(1<<1); //WGM11=0
+	TCCR1B |= (1<<3); //WGM12=1
+	TCCR1B &=~(1<<4); //WGM13=0
+
+    #elif T1_FASTPWM_OPMODE ==T1_FASTPWM_MODE2 //9bits mode ,top value is 0x01FF
+	TCCR1A &=~(1<<0); //WGM10=0
+	TCCR1A |= (1<<1); //WGM11=1
+	TCCR1B |= (1<<3); //WGM12=1
+	TCCR1B &=~(1<<4); //WGM13=0
+
+    #elif T1_FASTPWM_OPMODE ==T1_FASTPWM_MODE3 //10bits mode,top value is 0x03FF
+	TCCR1A |= (1<<0)|(1<<1); //WGM10=1 WGM11=1
+	TCCR1B |= (1<<3);        //WGM12=1
+	TCCR1B &=~(1<<4);        //WGM13=0
+
+    #elif T1_FASTPWM_OPMODE ==T1_FASTPWM_MODE4 //top value is set by ICR1 register
+    TCCR1A &=~(1<<0);        //WGM10=0
+	TCCR1A |= (1<<1);        //WGM11=1
+	TCCR1B |= (1<<3)|(1<<4); //WGM12=1 WGM13=1
+
+    #elif T1_FASTPWM_OPMODE ==T1_FASTPWM_MODE5 //top value is set by OCR1A register
+	TCCR1A=(1<<0)|(1<<1); //WGM10=1 WGM11=1
+	TCCR1B=(1<<3)|(1<<4); //WGM12=1 WGM13=1
+    #endif
+
+	T1_OC1A_OC1B_OutputCTRL();
+
+}
+
+
+void Timer1_CHA_SetPWM_DutyCycle(u8 DutyCyclePercentage)
+{
+ u16 CHA_RequiredCounts;
+
+#if   OC1A_OPMODE== OC1A_MODE2 //non inverting mode
+
+    #if T1_FASTPWM_OPMODE==T1_FASTPWM_MODE1 //8bits mode , MAX counts in this mode is 256 counts "0->255"
+         OCR1AH=0; //store zero in the OCRA high byte
+         OCR1AL=(255*((f32)DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
+
+    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE2 //9bits mode, MAX counts in this mode is 512 counts "0->511"
+         CHA_RequiredCounts=(511*((f32)DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
+         OCR1AH = (CHA_RequiredCounts & HIGH_BYTE_MASK)>>8;
+         OCR1AL = (CHA_RequiredCounts & LOW_BYTE_MASK);
+
+    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE3//10bits mode , MAX counts in this mode is 1024 counts "0->1023"
+         CHA_RequiredCounts=(1023*((f32)DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
+         OCR1AH = (CHA_RequiredCounts & HIGH_BYTE_MASK)>>8; //store the high byte
+         OCR1AL = (CHA_RequiredCounts & LOW_BYTE_MASK); //store the low byte
+         #endif
+
+
+#elif OC1A_OPMODE== OC1A_MODE3 //inverting mode
+
+    #if T1_FASTPWM_OPMODE==T1_FASTPWM_MODE1 //8bits mode , MAX counts in this mode is 256 counts "0->255"
+        OCR1AH=0; //store zero in the OCRA high byte
+        OCR1AL=255-(255*((f32)DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
+
+    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE2 //9bits mode, MAX counts in this mode is 512 counts "0->511"
+         CHA_RequiredCounts=511-(511*((f32)DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
+         OCR1AH = (CHA_RequiredCounts & HIGH_BYTE_MASK)>>8;
+         OCR1AL = (CHA_RequiredCounts & LOW_BYTE_MASK);
+
+    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE3//10bits mode , MAX counts in this mode is 1024 counts "0->1023"
+         CHA_RequiredCounts=1023-(1023*((f32)DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
+         OCR1AH = (CHA_RequiredCounts & HIGH_BYTE_MASK)>>8; //store the high byte
+         OCR1AL = (CHA_RequiredCounts & LOW_BYTE_MASK); //store the low byte
+         #endif
+#endif
+}
+
+
+void Timer1_CHB_SetPWM_DutyCycle(u8 DutyCyclePercentage)
+{
+ u16 CHB_RequiredCounts;
+
+#if   OC1B_OPMODE== OC1B_MODE2 //non inverting mode
+
+    #if T1_FASTPWM_OPMODE==T1_FASTPWM_MODE1 //8bits mode , MAX counts in this mode is 256 counts "0->255"
+         OCR1BH=0; //store zero in the OCRA high byte
+         OCR1BL=(255*((f32)DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
+
+    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE2 //9bits mode, MAX counts in this mode is 512 counts "0->511"
+         CHB_RequiredCounts=(511*((f32)DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
+         OCR1BH = (CHB_RequiredCounts & HIGH_BYTE_MASK)>>8;
+         OCR1BL = (CHB_RequiredCounts & LOW_BYTE_MASK);
+
+    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE3//10bits mode , MAX counts in this mode is 1024 counts "0->1023"
+         CHB_RequiredCounts=(1023*((f32)DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
+         OCR1BH = (CHB_RequiredCounts & HIGH_BYTE_MASK)>>8; //store the high byte
+         OCR1BL = (CHB_RequiredCounts & LOW_BYTE_MASK); //store the low byte
+         #endif
+
+
+#elif OC1A_OPMODE== OC1A_MODE3 //inverting mode
+
+    #if T1_FASTPWM_OPMODE==T1_FASTPWM_MODE1 //8bits mode , MAX counts in this mode is 256 counts "0->255"
+        OCR1BH=0; //store zero in the OCRA high byte
+        OCR1BL=255-(255*((f32)DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
+
+    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE2 //9bits mode, MAX counts in this mode is 512 counts "0->511"
+        CHB_RequiredCounts=511-(511*((f32)DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
+         OCR1BH = (CHB_RequiredCounts & HIGH_BYTE_MASK)>>8;
+         OCR1BL = (CHB_RequiredCounts & LOW_BYTE_MASK);
+
+    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE3//10bits mode , MAX counts in this mode is 1024 counts "0->1023"
+         CHB_RequiredCounts=1023-(1023*((f32)DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
+         OCR1BH = (CHB_RequiredCounts & HIGH_BYTE_MASK)>>8; //store the high byte
+         OCR1BL = (CHB_RequiredCounts & LOW_BYTE_MASK); //store the low byte
+         #endif
+#endif
+}
+
 /**
  * RETURN      :VOID.
  * PARAMETER   :VOID.
@@ -399,48 +519,50 @@ static void T1_OVFcounterFunc(void)
  * DESCRIPTION: static function to set the operation mode of OC1A and OC1B pins according to predefined MACROS
  * OC1A_OPMODE & OC1B_OPMODE
  */
-static void T1_OC1AB_NonPWMCtrl()
+static void T1_OC1A_OC1B_OutputCTRL()
 {
 	     //define the operation mode for OC1A pin
-		   #if OC1A_OPMODE==OC1A_MODE0    //OCA1 pin is disconnected, normal port operation
+		   #if OC1A_OPMODE==OC1A_MODE0    //OC1A_MODE0
 		 	   TCCR1A &=~((1<<6) | (1<<7));  //COM1A1=0 COM1A0=0
 
-           #elif OC1A_OPMODE==OC1A_MODE1  //TOGGLE ON MATCH
+           #elif OC1A_OPMODE==OC1A_MODE1  //OC1A_MODE1
 		        TCCR1A |=(1<<6);   //COM1A0=1
 			    TCCR1A &=~(1<<7);  //COM1A1=0
 			    SetPinDIR(3,5,1); //define PD5 pin as output
 
-           #elif OC1A_OPMODE==OC1A_MODE2 //CLEAR ON MATCH
+           #elif OC1A_OPMODE==OC1A_MODE2 //OC1A_MODE2
 		 	   	TCCR1A &=~(1<<6);   //COM1A0=0
 		 		TCCR1A |=(1<<7);    //COM1A1=1
 		 		SetPinDIR(3,5,1); //define PD5 pin as output
 
-           #else  //SET ON MATCH
+           #else  //OC1A_MODE3
 		 		TCCR1A |=((1<<6) | (1<<7)); //COM1A1=1 COM1A0=1
 		 		SetPinDIR(3,5,1); //define PD5 pin as output
            #endif
 
 
 		   //define the operation mode for OC1B pin
-           #if OC1B_OPMODE==OC1B_MODE0  //disconnected , normal port operation
+           #if OC1B_OPMODE==OC1B_MODE0  //OC1B_MODE0
 				TCCR1A &=~((1<<4) | (1<<5));  //COM1B1=0 COM1B0=0
 
-           #elif OC1B_OPMODE==OC1B_MODE1//TOGGLE ON MATCH
+           #elif OC1B_OPMODE==OC1B_MODE1//OC1B_MODE1
 				TCCR1A |=(1<<4);   //COM1B0=1
 				TCCR1A &=~(1<<5);  //COM1B1=0
 				SetPinDIR(3,4,1); //define PD4 pin as output
 
-           #elif OC1B_OPMODE==OC1B_MODE2 //CLEAR ON MATCH
+           #elif OC1B_OPMODE==OC1B_MODE2 //OC1B_MODE2
 				TCCR1A &=~(1<<4);   //COM1B0=0
 				TCCR1A |=(1<<5);    //COM1B1=1
 				SetPinDIR(3,4,1); //define PD4 pin as output
 
-           #else //SET ON MATCH
+           #else //OC1B_MODE3
 				TCCR1A |=((1<<4) | (1<<5)); //COM1B1=1 COM1B0=1
 				SetPinDIR(3,4,1); //define PD4 pin as output
            #endif
-
 }
+
+
+
 
 
 /**
