@@ -4,7 +4,8 @@
  *  Created on: 15/03/2021
  *  Author: Mohamed_EL_Gallad
  */
-
+#define F_CPU 12000000
+#include "util\delay.h"
 #include "STD_types.h"
 #include "Mega32_reg.h"
 #include "TimersConfig.h"
@@ -20,7 +21,8 @@
 volatile static u32 ICU_TonTicks=0,ICU_ToffTicks=0;
 volatile        u16 T1_OVF_Counter;
 volatile static u8 ICU_EdgeFlag=0;
-         static u8 T1_DutyCycle=0;
+         static f32 T1_CHA_DutyCycle=0;
+         static f32 T1_CHB_DutyCycle=0;
 
 static void      (*Timer1_OverFlowIntFunc)();
 static void (*Timer1_CHA_CompMatchIntFunc)();
@@ -28,6 +30,7 @@ static void (*Timer1_CHB_CompMatchIntFunc)();
 
 static void T1_OC1A_OC1B_OutputCTRL(void);
 static void T1_OVFcounterFunc      (void);
+static u16  T1_PrescalerDivisor    (void);
 
 
 /**
@@ -37,7 +40,7 @@ static void T1_OVFcounterFunc      (void);
  * mode according to the predefined OC1A_OPMODE & OC1B_OPMODE MACROS.
  * Timer1_Enable() will be required to start the timer1 module and Timer1_Stop() to disable it
  */
-void Timer1_NormalModeInit()
+void Timer1_NormalModeInit(void)
 {
 	TCCR1A &=~((1<<0) | (1<<1)); // WGM10=0 WGM11=0
 	TCCR1B &=~((1<<3) | (1<<4)); // WGM12=0 WGM13=0
@@ -106,7 +109,7 @@ void Timer1_CountDownOverFlows(u32 T1_OverFLowsNo)
  *  this function will also set OC1A & OC1B pins operation mode according to the predefined OC1A_OPMODE & OC1B_OPMODE MACROS.
  *  Timer1_Enable() will be required to start the timer1 module and Timer1_Stop() to disable it.
  */
-void Timer1_CTCModeInit()
+void Timer1_CTCModeInit(void)
 {
 	switch(T1_COMPMATCH_OPMODE)
 	{
@@ -351,7 +354,12 @@ void Timer1_ICUGetEventData(f32 *TonTime , f32 *DutyCycle ,u16 *Freq)
 }
 
 
-void Timer1_FastPWMInit(){
+void Timer1_FastPWMInit(void){
+	//confirm that either T1_FASTPWM_OPMODE or TI_PWM_PHASECORR_OPMODE MACROS is set to an operating mode and the other one set to a disabled macro
+#if T1_FASTPWM_OPMODE!=T1_FASTPWM_DISABLED && TI_PWM_PHASECORR_OPMODE!=T1_PHASECORR_DISABLED
+#error "both T1_FASTPWM_OPMODE & TI_PWM_PHASECORR_OPMODE MACROS are defined to an operating mode , the output will be undefined"
+#endif
+
 	TCCR1A &=~((1<<3) | (1<<2)); //reset Force Output Compare for Channel A & Channel B
 
 	//setting the desired fast PWM operation mode
@@ -382,93 +390,236 @@ void Timer1_FastPWMInit(){
 	TCCR1B=(1<<3)|(1<<4); //WGM12=1 WGM13=1
     #endif
 
-	T1_OC1A_OC1B_OutputCTRL();
+	T1_OC1A_OC1B_OutputCTRL(); //define the operation mode of OC1A & OC1B according to the predefined MACROS OC1A_OPMODE & OC1B_OPMODE
+}
 
+void Timer1_PhaseCorrPWMInit(void)
+{
+	//confirm that either T1_FASTPWM_OPMODE or TI_PWM_PHASECORR_OPMODE MACROS is set to an operating mode and the other one set to a disabled macro
+#if T1_FASTPWM_OPMODE!=T1_FASTPWM_DISABLED && TI_PWM_PHASECORR_OPMODE!=T1_PHASECORR_DISABLED
+#error "both T1_FASTPWM_OPMODE & TI_PWM_PHASECORR_OPMODE MACROS is defined to an operating mode , the output will be undefined"
+#endif
+
+	TCCR1A &=~((1<<3) | (1<<2)); //reset Force Output Compare for Channel A & Channel B
+
+    #if   TI_PWM_PHASECORR_OPMODE == T1_PHASECORR_MODE1 //phase correct PWM ,top value is 8bits
+	     TCCR1A |= (1<<0);  //WGM10=1
+	     TCCR1A &=~(1<<1);  //WGM11=0
+	     TCCR1B &=~((1<<3) | (1<<4)); //WGM12=0 WGM13=0
+
+    #elif TI_PWM_PHASECORR_OPMODE == T1_PHASECORR_MODE2 //phase correct PWM ,top value is 9bits
+	     TCCR1A &=~(1<<0);  //WGM10=0
+	     TCCR1A |=(1<<1);  //WGM11=1
+	     TCCR1B &=~((1<<3) | (1<<4)); //WGM12=0 WGM13=0
+
+    #elif TI_PWM_PHASECORR_OPMODE == T1_PHASECORR_MODE3 //phase correct PWM ,top value is 10bits
+	     TCCR1A |=(1<<1) | (1<<0);  //WGM10=1 WGM11=1
+	     TCCR1B &=~((1<<3) | (1<<4)); //WGM12=0 WGM13=0
+
+    #elif TI_PWM_PHASECORR_OPMODE == T1_PHASECORR_MODE4 //phase correct PWM ,top value is defined by ICR1 register
+	     TCCR1A &=~(1<<0);  //WGM10=0
+		 TCCR1A |=(1<<1);   //WGM11=1
+	   	 TCCR1B &=~(1<<3);  //WGM12=0
+	   	 TCCR1B |=(1<<4);   //WGM13=1
+
+    #elif TI_PWM_PHASECORR_OPMODE == T1_PHASECORR_MODE5 //phase correct PWM ,top value is defined by OCR1A register
+	   	 TCCR1A |=(1<<0) | (1<<1); //WGM10=1 WGM11=1
+	   	 TCCR1B &=~(1<<3);  //WGM12=0
+	   	 TCCR1B |=(1<<4);   //WGM13=1
+
+    #elif TI_PWM_PHASECORR_OPMODE == T1_PHASE_FREQ_CORR_MODE1 //phase and frequency correct top value is defined by ICR1
+	     TCCR1A &=~((1<<0) | (1<<1)); //WGM10=0 WGM11=0
+	   	 TCCR1B &=~(1<<3); //WGM12=0
+	   	 TCCR1B |= (1<<4); //WGM13=1
+
+    #elif TI_PWM_PHASECORR_OPMODE == T1_PHASE_FREQ_CORR_MODE2 //phase and frequency correct top value is defined by OCR1A
+	     TCCR1A |=(1<<0);  //WGM10=1
+		 TCCR1A &=~(1<<1); //WGM11=0
+	   	 TCCR1B &=~(1<<3); //WGM12=0
+	   	 TCCR1B |=(1<<4);  //WGM13=1
+
+    #endif
+
+	   	T1_OC1A_OC1B_OutputCTRL(); //define the operation mode of OC1A & OC1B according to the predefined MACROS OC1A_OPMODE & OC1B_OPMODE
 }
 
 
-void Timer1_CHA_SetPWM_DutyCycle(u8 DutyCyclePercentage)
+void Timer1_CHA_SetPWM_DutyCycle(f32 CHA_DutyCyclePercentage)
 {
- u16 CHA_RequiredCounts;
+
+ T1_CHA_DutyCycle=CHA_DutyCyclePercentage;
 
 #if   OC1A_OPMODE== OC1A_MODE2 //non inverting mode
 
-    #if T1_FASTPWM_OPMODE==T1_FASTPWM_MODE1 //8bits mode , MAX counts in this mode is 256 counts "0->255"
+    #if T1_FASTPWM_OPMODE==T1_FASTPWM_MODE1  || TI_PWM_PHASECORR_OPMODE==T1_PHASECORR_MODE1//8bits mode , MAX counts in this mode is 256 counts "0->255"
          OCR1AH=0; //store zero in the OCRA high byte
-         OCR1AL=(255*((f32)DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
+         OCR1AL=(255*((f32)CHA_DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
 
-    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE2 //9bits mode, MAX counts in this mode is 512 counts "0->511"
-         CHA_RequiredCounts=(511*((f32)DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
+    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE2 || TI_PWM_PHASECORR_OPMODE==T1_PHASECORR_MODE2//9bits mode, MAX counts in this mode is 512 counts "0->511"
+         u16 CHA_RequiredCounts;
+         CHA_RequiredCounts=(511*((f32)CHA_DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
          OCR1AH = (CHA_RequiredCounts & HIGH_BYTE_MASK)>>8;
          OCR1AL = (CHA_RequiredCounts & LOW_BYTE_MASK);
 
-    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE3//10bits mode , MAX counts in this mode is 1024 counts "0->1023"
-         CHA_RequiredCounts=(1023*((f32)DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
+    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE3 || TI_PWM_PHASECORR_OPMODE==T1_PHASECORR_MODE3//10bits mode , MAX counts in this mode is 1024 counts "0->1023"
+         u16 CHA_RequiredCounts;
+         CHA_RequiredCounts=(1023*((f32)CHA_DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
          OCR1AH = (CHA_RequiredCounts & HIGH_BYTE_MASK)>>8; //store the high byte
          OCR1AL = (CHA_RequiredCounts & LOW_BYTE_MASK); //store the low byte
-         #endif
 
+    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE4 || TI_PWM_PHASECORR_OPMODE==T1_PHASECORR_MODE4 || TI_PWM_PHASECORR_OPMODE==T1_PHASE_FREQ_CORR_MODE1//Top value is defined by ICR1 register
+          u16 CHA_TopValue,CHA_RequiredCounts;
+          CHA_TopValue =ICR1L;  //read the low byte of the ICR1L
+          CHA_TopValue|=ICR1H <<8; //read the high byte of the ICR1H
+          CHA_RequiredCounts=((CHA_TopValue-1)*((f32)CHA_DutyCyclePercentage/100));// store the value that will achieve the required duty cycle
+          OCR1AH = (CHA_RequiredCounts & HIGH_BYTE_MASK)>>8; //store the high byte
+          OCR1AL = (CHA_RequiredCounts & LOW_BYTE_MASK); //store the low byte
+
+          #endif
 
 #elif OC1A_OPMODE== OC1A_MODE3 //inverting mode
 
-    #if T1_FASTPWM_OPMODE==T1_FASTPWM_MODE1 //8bits mode , MAX counts in this mode is 256 counts "0->255"
+    #if T1_FASTPWM_OPMODE==T1_FASTPWM_MODE1  || TI_PWM_PHASECORR_OPMODE==T1_PHASECORR_MODE1 //8bits mode , MAX counts in this mode is 256 counts "0->255"
         OCR1AH=0; //store zero in the OCRA high byte
-        OCR1AL=255-(255*((f32)DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
+        OCR1AL=255-(255*((f32)CHA_DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
 
-    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE2 //9bits mode, MAX counts in this mode is 512 counts "0->511"
-         CHA_RequiredCounts=511-(511*((f32)DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
+    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE2 || TI_PWM_PHASECORR_OPMODE==T1_PHASECORR_MODE2 //9bits mode, MAX counts in this mode is 512 counts "0->511"
+         u16 CHA_RequiredCounts;
+         CHA_RequiredCounts=511-(511*((f32)CHA_DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
          OCR1AH = (CHA_RequiredCounts & HIGH_BYTE_MASK)>>8;
          OCR1AL = (CHA_RequiredCounts & LOW_BYTE_MASK);
 
-    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE3//10bits mode , MAX counts in this mode is 1024 counts "0->1023"
-         CHA_RequiredCounts=1023-(1023*((f32)DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
+    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE3 || TI_PWM_PHASECORR_OPMODE==T1_PHASECORR_MODE3//10bits mode , MAX counts in this mode is 1024 counts "0->1023"
+         u16 CHA_RequiredCounts;
+         CHA_RequiredCounts=1023-(1023*((f32)CHA_DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
+         OCR1AH = (CHA_RequiredCounts & HIGH_BYTE_MASK)>>8; //store the high byte
+         OCR1AL = (CHA_RequiredCounts & LOW_BYTE_MASK); //store the low byte.
+
+    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE4 || TI_PWM_PHASECORR_OPMODE==T1_PHASECORR_MODE4 || TI_PWM_PHASECORR_OPMODE==T1_PHASE_FREQ_CORR_MODE1 //Top value is defined by ICR1 register
+         u16 CHA_TopValue,CHA_RequiredCounts;
+         CHA_TopValue =ICR1L;  //read the low byte of the ICR1L
+         CHA_TopValue|=ICR1H <<8; //read the high byte of the ICR1H
+         CHA_RequiredCounts=(CHA_TopValue-1)-((CHA_TopValue-1)*((f32)CHA_DutyCyclePercentage/100));// store the value that will achieve the required duty cycle
          OCR1AH = (CHA_RequiredCounts & HIGH_BYTE_MASK)>>8; //store the high byte
          OCR1AL = (CHA_RequiredCounts & LOW_BYTE_MASK); //store the low byte
-         #endif
-#endif
+
+         #endif //inner #if
+#endif //outer #if
 }
 
 
-void Timer1_CHB_SetPWM_DutyCycle(u8 DutyCyclePercentage)
+void Timer1_CHB_SetPWM_DutyCycle(f32 CHB_DutyCyclePercentage)
 {
- u16 CHB_RequiredCounts;
+
+ T1_CHB_DutyCycle=CHB_DutyCyclePercentage;
 
 #if   OC1B_OPMODE== OC1B_MODE2 //non inverting mode
 
-    #if T1_FASTPWM_OPMODE==T1_FASTPWM_MODE1 //8bits mode , MAX counts in this mode is 256 counts "0->255"
+    #if T1_FASTPWM_OPMODE==T1_FASTPWM_MODE1  || TI_PWM_PHASECORR_OPMODE==T1_PHASECORR_MODE1  //8bits mode , MAX counts in this mode is 256 counts "0->255"
          OCR1BH=0; //store zero in the OCRA high byte
-         OCR1BL=(255*((f32)DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
+         OCR1BL=(255*((f32)CHB_DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
 
-    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE2 //9bits mode, MAX counts in this mode is 512 counts "0->511"
-         CHB_RequiredCounts=(511*((f32)DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
+    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE2 || TI_PWM_PHASECORR_OPMODE==T1_PHASECORR_MODE2  //9bits mode, MAX counts in this mode is 512 counts "0->511"
+         u16 CHB_RequiredCounts;
+         CHB_RequiredCounts=(511*((f32)CHB_DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
          OCR1BH = (CHB_RequiredCounts & HIGH_BYTE_MASK)>>8;
          OCR1BL = (CHB_RequiredCounts & LOW_BYTE_MASK);
 
-    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE3//10bits mode , MAX counts in this mode is 1024 counts "0->1023"
-         CHB_RequiredCounts=(1023*((f32)DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
+    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE3 || TI_PWM_PHASECORR_OPMODE==T1_PHASECORR_MODE3//10bits mode , MAX counts in this mode is 1024 counts "0->1023"
+         u16 CHB_RequiredCounts;
+         CHB_RequiredCounts=(1023*((f32)CHB_DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
          OCR1BH = (CHB_RequiredCounts & HIGH_BYTE_MASK)>>8; //store the high byte
          OCR1BL = (CHB_RequiredCounts & LOW_BYTE_MASK); //store the low byte
-         #endif
+
+    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE4 || TI_PWM_PHASECORR_OPMODE==T1_PHASECORR_MODE4 || TI_PWM_PHASECORR_OPMODE==T1_PHASE_FREQ_CORR_MODE1  //Top value is defined by ICR1 register
+         u16 CHB_TopValue,CHB_RequiredCounts;
+         CHB_TopValue =ICR1L;  //read the low byte of the ICR1L
+         CHB_TopValue |=ICR1H <<8; //read the high byte of the ICR1H
+         CHB_RequiredCounts=((CHB_TopValue-1)*((f32)CHB_DutyCyclePercentage/100));// store the value that will achieve the required duty cycle
+         OCR1BH = (CHB_RequiredCounts & HIGH_BYTE_MASK)>>8; //store the high byte
+         OCR1BL = (CHB_RequiredCounts & LOW_BYTE_MASK); //store the low byte
+
+    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE5 || TI_PWM_PHASECORR_OPMODE==T1_PHASECORR_MODE5 || TI_PWM_PHASECORR_OPMODE==T1_PHASE_FREQ_CORR_MODE2 //Top value is defined by OCR1A register
+         u16 CHB_TopValue,CHB_RequiredCounts;
+         CHB_TopValue =OCR1AL;  //read the low byte of the ICR1L
+         CHB_TopValue |=OCR1AH <<8; //read the high byte of the ICR1H
+         CHB_RequiredCounts=((CHB_TopValue-1)*((f32)CHB_DutyCyclePercentage/100));// store the value that will achieve the required duty cycle
+         OCR1BH = (CHB_RequiredCounts & HIGH_BYTE_MASK)>>8; //store the high byte
+         OCR1BL = (CHB_RequiredCounts & LOW_BYTE_MASK); //store the low byte
+
+         #endif //inner #if
 
 
 #elif OC1A_OPMODE== OC1A_MODE3 //inverting mode
 
-    #if T1_FASTPWM_OPMODE==T1_FASTPWM_MODE1 //8bits mode , MAX counts in this mode is 256 counts "0->255"
+    #if T1_FASTPWM_OPMODE==T1_FASTPWM_MODE1  || TI_PWM_PHASECORR_OPMODE==T1_PHASECORR_MODE1   //8bits mode , MAX counts in this mode is 256 counts "0->255"
         OCR1BH=0; //store zero in the OCRA high byte
-        OCR1BL=255-(255*((f32)DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
+        OCR1BL=255-(255*((f32)CHB_DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
 
-    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE2 //9bits mode, MAX counts in this mode is 512 counts "0->511"
-        CHB_RequiredCounts=511-(511*((f32)DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
+    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE2 || TI_PWM_PHASECORR_OPMODE==T1_PHASECORR_MODE2   //9bits mode, MAX counts in this mode is 512 counts "0->511"
+         u16 CHB_RequiredCounts;
+         CHB_RequiredCounts=511-(511*((f32)CHB_DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
          OCR1BH = (CHB_RequiredCounts & HIGH_BYTE_MASK)>>8;
          OCR1BL = (CHB_RequiredCounts & LOW_BYTE_MASK);
 
-    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE3//10bits mode , MAX counts in this mode is 1024 counts "0->1023"
-         CHB_RequiredCounts=1023-(1023*((f32)DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
+    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE3 || TI_PWM_PHASECORR_OPMODE==T1_PHASECORR_MODE3//10bits mode , MAX counts in this mode is 1024 counts "0->1023"
+         u16 CHB_RequiredCounts;
+         CHB_RequiredCounts=1023-(1023*((f32)CHB_DutyCyclePercentage/100)); // store the value that will achieve the required duty cycle
          OCR1BH = (CHB_RequiredCounts & HIGH_BYTE_MASK)>>8; //store the high byte
          OCR1BL = (CHB_RequiredCounts & LOW_BYTE_MASK); //store the low byte
-         #endif
-#endif
+
+    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE4 || TI_PWM_PHASECORR_OPMODE==T1_PHASECORR_MODE4 || TI_PWM_PHASECORR_OPMODE==T1_PHASE_FREQ_CORR_MODE1 //Top value is defined by ICR1 register
+         u16 CHB_TopValue,CHB_RequiredCounts;
+         CHB_TopValue =ICR1L;  //read the low byte of the ICR1L
+         CHB_TopValue |=ICR1H <<8; //read the high byte of the ICR1H
+         CHB_RequiredCounts=(CHB_TopValue-1)-((CHB_TopValue-1)*((f32)CHB_DutyCyclePercentage/100));// store the value that will achieve the required duty cycle
+         OCR1BH = (CHB_RequiredCounts & HIGH_BYTE_MASK)>>8; //store the high byte
+         OCR1BL = (CHB_RequiredCounts & LOW_BYTE_MASK); //store the low byte
+
+    #elif T1_FASTPWM_OPMODE==T1_FASTPWM_MODE5  || TI_PWM_PHASECORR_OPMODE==T1_PHASECORR_MODE5 || TI_PWM_PHASECORR_OPMODE==T1_PHASE_FREQ_CORR_MODE2//Top value is defined by OCR1A register
+         u16 CHB_TopValue,CHB_RequiredCounts;
+         CHB_TopValue =OCR1AL;  //read the low byte of the ICR1L
+         CHB_TopValue |=OCR1AH <<8; //read the high byte of the ICR1H
+         CHB_RequiredCounts=(CHB_TopValue-1)-((CHB_TopValue-1)*((f32)CHB_DutyCyclePercentage/100));// store the value that will achieve the required duty cycle
+         OCR1BH = (CHB_RequiredCounts & HIGH_BYTE_MASK)>>8; //store the high byte
+         OCR1BL = (CHB_RequiredCounts & LOW_BYTE_MASK); //store the low byte
+
+         #endif //inner #if
+
+#endif //outer #if
 }
+
+
+void Timer1_SetPWN_Freq(u16 Frequency){
+	u16 RequiredCounts=0,PrescalerDIV=0;
+	PrescalerDIV=T1_PrescalerDivisor();
+
+#if   T1_FASTPWM_OPMODE ==T1_FASTPWM_MODE4 //timer's top value defined by ICR1
+	   RequiredCounts=(CPU_FREQ/(((u32)PrescalerDIV) * Frequency))-1; //calculate the required top value to be stored in ICR1 to achieve the required frequency
+	   ICR1H= (RequiredCounts & HIGH_BYTE_MASK)>>8; //store the value of the high byte
+	   ICR1L= (RequiredCounts & LOW_BYTE_MASK); //store the value of the low byte
+
+#elif T1_FASTPWM_OPMODE	== T1_FASTPWM_MODE5 //timer's top value defined by OCR1A
+	   RequiredCounts=(CPU_FREQ/(((u32)PrescalerDIV) * Frequency))-1; //calculate the required top value to be stored OCR1A to achieve the required frequency
+	   OCR1AH = (RequiredCounts & HIGH_BYTE_MASK)>>8;//store the value of the high byte
+	   OCR1AL = (RequiredCounts & LOW_BYTE_MASK);//store the value of the low byte
+
+#elif TI_PWM_PHASECORR_OPMODE==T1_PHASECORR_MODE4 || TI_PWM_PHASECORR_OPMODE==T1_PHASE_FREQ_CORR_MODE1
+	   RequiredCounts=(CPU_FREQ/(((u32)PrescalerDIV) * Frequency * 2))-1; //calculate the required top value to be stored in ICR1 to achieve the required frequency
+	   ICR1H = (RequiredCounts & HIGH_BYTE_MASK)>>8;//store the value of the high byte
+	   ICR1L = (RequiredCounts & LOW_BYTE_MASK);//store the value of the low byte
+
+#elif TI_PWM_PHASECORR_OPMODE==T1_PHASECORR_MODE5 || TI_PWM_PHASECORR_OPMODE==T1_PHASE_FREQ_CORR_MODE2
+	   RequiredCounts=(CPU_FREQ/(((u32)PrescalerDIV) * Frequency * 2))-1; //calculate the required top value to be stored OCR1A to achieve the required frequency
+	   OCR1AH = (RequiredCounts & HIGH_BYTE_MASK)>>8; //store the value of the high byte
+	   OCR1AL = (RequiredCounts & LOW_BYTE_MASK); //store the value of the low byte
+
+#endif
+
+	Timer1_CHB_SetPWM_DutyCycle(T1_CHB_DutyCycle); //re-calculate the duty cycle for Channel B after the frequency being changed
+	Timer1_CHA_SetPWM_DutyCycle(T1_CHA_DutyCycle); //re-calculate the duty cycle for Channel A after the frequency being changed
+}
+
 
 /**
  * RETURN      :VOID.
@@ -513,13 +664,31 @@ static void T1_OVFcounterFunc(void)
 }
 
 
+static u16 T1_PrescalerDivisor(void)
+{
+	u16 Divisor=0;
+#if TIMER1_PRESCALER==NO_PRESCALER
+	Divisor =1;
+#elif TIMER1_PRESCALER==CLK_DIV_BY8
+	Divisor =8;
+#elif TIMER1_PRESCALER==CLK_DIV_BY64
+	Divisor =64;
+#elif TIMER1_PRESCALER==CLK_DIV_BY265
+	Divisor =265;
+#elif TIMER1_PRESCALER==CLK_DIV_BY1024
+	Divisor =1024;
+#endif
+
+	return Divisor;
+}
+
 /**
  * RETURN     : VOID
  * PARAMETER  : VOID
  * DESCRIPTION: static function to set the operation mode of OC1A and OC1B pins according to predefined MACROS
  * OC1A_OPMODE & OC1B_OPMODE
  */
-static void T1_OC1A_OC1B_OutputCTRL()
+static void T1_OC1A_OC1B_OutputCTRL(void)
 {
 	     //define the operation mode for OC1A pin
 		   #if OC1A_OPMODE==OC1A_MODE0    //OC1A_MODE0

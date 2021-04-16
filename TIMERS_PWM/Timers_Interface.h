@@ -298,16 +298,58 @@ void Timer1_InputCaptureInit(void);
 void Timer1_ICUGetEventData(f32 *TonTime, f32 *DutyCycle, u16 *Freq);
 
 
-
+/**
+ * RETURN      : VOID
+ * PARAMETER   : VOID
+ * DESCRIPTION :  This function will set timer1 functionality to operate in one of the 5 Fast PWM modes that are available
+ * depending on the predefined macro T1_FASTPWM_OPMODE and it will also set OC1A and OCA1B  pins operation
+ *  mode depending on the predefined OC1A_OPMODE & OC1B_OPMODE MACROS
+ *  Timer1_Enable() will be required to start the timer1 module and Timer1_Stop() to disable it.
+ */
 void Timer1_FastPWMInit(void);
 
 
+/**
+ * RETURN     :VOID.
+ * PARAMETER  :VOID.
+ * DESCRIPTION:This function will set timer1 functionality to operate in one of 7 available modes of either Phase Correct PWM or phase and frequency correct
+ * depending on the predefined macro TI_PWM_PHASECORR_OPMODE and it will also set OC1A and OCA1B  pins operation
+ *  mode depending on the predefined OC1A_OPMODE & OC1B_OPMODE MACROS
+ *  Timer1_Enable() will be required to start the timer1 module and Timer0_Stop() to disable it.
+ */
 void Timer1_PhaseCorrPWMInit(void);
 
 
-void Timer1_CHA_SetPWM_DutyCycle(u8 DutyCyclePercentage);
+/**
+ * RETURN      : VOID
+ * PARAMETER   : CHA_DutyCyclePercentage is f32 variable that represents the required duty cycle for channel A and must have a value between 0.0 -> 100.0
+ * DESCRIPTION : this function is used to set the output's duty cycle of channel A in either fast PWM modes or Phase correct PWM modes
+ */
+void Timer1_CHA_SetPWM_DutyCycle(f32 CHA_DutyCyclePercentage);
 
-void Timer1_CHB_SetPWM_DutyCycle(u8 DutyCyclePercentage);
+
+/**
+ * RETURN      : VOID
+ * PARAMETER   : CHB_DutyCyclePercentage is f32 variable that represents the required duty cycle for channel B and must have a value between 0.0 -> 100.0
+ * DESCRIPTION : this function is used to set the output's duty cycle of channel B in either fast PWM modes or Phase correct PWM modes
+ */
+void Timer1_CHB_SetPWM_DutyCycle(f32 CHB_DutyCyclePercentage);
+
+
+/**
+ * RETURN      : VOID
+ * PARAMETER   : Frequency is u16 variable that represents the required frequency for channel A and channel B
+ * DESCRIPTION : this function is used to set the required frequency for both channel A and channel B in any of the following modes:
+ * T1_PHASECORR_MODE4
+ * T1_PHASECORR_MODE5
+ * T1_PHASE_FREQ_CORR_MODE1
+ * T1_PHASE_FREQ_CORR_MODE2
+ * T1_FASTPWM_MODE4
+ * T1_FASTPWM_MODE5
+ * and will have no effect if being used with any other PWM modes
+ * NOTE        :changing the frequency from a value to another during the operation will adjust the duty cycle automatically to match the predefined value before changing the frequency
+ */
+void Timer1_SetPWN_Freq(u16 Frequency);
 
 
 /**
