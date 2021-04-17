@@ -6,12 +6,13 @@
  */
 #define F_CPU 12000000
 #include "util\delay.h"
+
 #include "STD_types.h"
 #include "Mega32_reg.h"
 #include "TimersConfig.h"
 #include "REG_utils.h"
 #include "Timers_Interface.h"
-
+#include "LCD.h"
 
 #define T1_PRESCALER_MASK 0xF8
 #define HIGH_BYTE_MASK    0xFF00
@@ -96,6 +97,54 @@ void Timer1_CountDownOverFlows(u32 T1_OverFLowsNo)
 		TIFR |=(1<<2);
 		T1_OverFLowsNo--;
 	}
+}
+
+
+/**
+ * RETURN      : VOID
+ * PARAMETER   : VOID
+ * DESCRIPTION : this function is used to initiate timer1 as counter , it will count numbers of external falling or rising edges
+ * applied on pin B1 , the edge trigger type can be selected by setting the TIMER1_PRESCALER MACRO to
+ * either EXT_CLK_FALLING "for falling edge trigger" OR EXT_CLK_RISSING "for rising edge trigger"
+ *  Timer1_Enable() will be required to start the timer1 module and Timer1_Stop() to disable it
+ * CAUTION     :this function will force timer1 to operate in normal mode and it will also dictate timer1 overflow interrupt
+ */
+void Timer1_CounterInit(void)
+{
+	Timer1_NormalModeInit(); //force timer1 to operate in normal mode
+	 TCCR1A &=~((1<<6) | (1<<7)); //COM1A1=0 COM1A0=0 ,define OC1A pin to be disconnected normal pin operation
+	 TCCR1A &=~((1<<4) | (1<<5));  //COM1B1=0 COM1B0=0 ,define OC1B pin to be disconnected normal pin operation
+	 SetPinDIR(1, 1, 0); //define pin B1 "T1" as input
+	 SetPinValue(1, 1, 1); //enable internal pull up resistor of pin B0
+	 Timer1_ExecuteOnOverFlow(&T1_OVFcounterFunc); //mount the overflow counter function to overflow interrupt
+}
+
+
+/**
+ * RETURN      : u32 variable represents the counter value
+ * PARAMETER   : VOID
+ * DESCRIPTION : this function will return a value represents the number of counts of the signal applied on pin B1
+ */
+u32 Timer1_GetCounterValue(void){
+	u32 NoOfCounts;
+	NoOfCounts =(u8)TCNT1L; //read the counter low byte
+	NoOfCounts|=(u16)(TCNT1H<<8); //read the counter high byte
+	NoOfCounts+=(T1_OVF_Counter*65536); //calculate the number of counts and taking in consideration the number of overflows
+	return NoOfCounts;
+}
+
+
+/**
+ * RETURN      : VOID
+ * PARAMETER   : VOID
+ * DESCRIPTION : this function is used to reset the counter's value as it will reset the value stored in TCNT1H & TCNT1L
+ * and will also reset the number of overflows
+ */
+void Timer1_ResetCounter(void)
+{
+	TCNT1H=0x0; //set timer1 counter high byte to zero
+	TCNT1L=0x0; //set timer1 counter low byte to zero
+	T1_OVF_Counter=0; //reset the number of overflows
 }
 
 
@@ -220,7 +269,8 @@ void Timer1_SetCompMatchTopVal (u16 T1_CTC_TopValue)
 /**
  * RETURN      :VOID.
  * PARAMETER   :T1_CHA_CompareMatchValue this U16 variable will set the compare match value for timer1 channel A.
- * DESCRIPTION :this function is used to set the compare match value for timer1 channel A "OCR1A=T1_CHA_CompareMatchValue" if TI_COMPMATCH_MODE2 is being used as timer1 compare match mode
+ * DESCRIPTION :this function is used to set the compare match value for timer1 channel A "OCR1A=T1_CHA_CompareMatchValue"
+ * if TI_COMPMATCH_MODE2 is being used as timer1 compare match mode
  * CAUTOION    :this function will have no effect if OCR1A is used to set timer1's top value "T1_COMPMATCH_OPMODE=T1_COMPMATCH_MODE2"
  */
 void Timer1_CHA_SetCompValue(u16 T1_CHA_CompareMatchValue)
@@ -238,8 +288,10 @@ void Timer1_CHA_SetCompValue(u16 T1_CHA_CompareMatchValue)
  * RETURN      :VOID.
  * PARAMETER   :T1_CHB_CompareMatchValue this U16 variable will set the compare match value for timer1 channel B.
  * DESCRIPTION :this function is used to set the compare match value for timer1 channel B "OCR1B=T1_CHB_CompareMatchValue"
- * CAUTOION    :T1_CHB_CompareMatchValue Must have a value less than or equal OCR1A in case it's being used to set the timer's top value "T1_COMPMATCH_OPMODE=T1_COMPMATCH_MODE2"
- * OR a value less than or equal ICR1 in case it's being used to set the timer's top value "T1_COMPMATCH_OPMODE=T1_COMPMATCH_MODE1" otherwise no compare match will occur
+ * CAUTOION    :T1_CHB_CompareMatchValue Must have a value less than or equal OCR1A in case it's being used to set the timer's top value
+ * where "T1_COMPMATCH_OPMODE=T1_COMPMATCH_MODE2"
+ * OR a value less than or equal ICR1 in case it's being used to set the timer's top value "T1_COMPMATCH_OPMODE=T1_COMPMATCH_MODE1"
+ * otherwise no compare match will occur
  */
 void Timer1_CHB_SetCompValue(u16 T1_CHB_CompareMatchValue)
 {
@@ -317,6 +369,8 @@ void Timer1_InputCaptureInit(void)
 
 void Timer1_ICUGetEventData(f32 *TonTime , f32 *DutyCycle ,u16 *Freq)
 {
+	u32 Timer1_OP_CLK;
+	Timer1_OP_CLK=CPU_FREQ/T1_PrescalerDivisor();
 	TIFR |=(1<<5); //reset input capture flag to avoid accidental interrupt
 
 	Timer1_ExecuteOnOverFlow(&T1_OVFcounterFunc); //mount overflows counter function
@@ -354,6 +408,14 @@ void Timer1_ICUGetEventData(f32 *TonTime , f32 *DutyCycle ,u16 *Freq)
 }
 
 
+/**
+ * RETURN      : VOID
+ * PARAMETER   : VOID
+ * DESCRIPTION :  This function will set timer1 functionality to operate in one of the 5 Fast PWM modes that are available
+ * depending on the predefined macro T1_FASTPWM_OPMODE and it will also set OC1A and OCA1B  pins operation
+ *  mode depending on the predefined OC1A_OPMODE & OC1B_OPMODE MACROS
+ *  Timer1_Enable() will be required to start the timer1 module and Timer1_Stop() to disable it.
+ */
 void Timer1_FastPWMInit(void){
 	//confirm that either T1_FASTPWM_OPMODE or TI_PWM_PHASECORR_OPMODE MACROS is set to an operating mode and the other one set to a disabled macro
 #if T1_FASTPWM_OPMODE!=T1_FASTPWM_DISABLED && TI_PWM_PHASECORR_OPMODE!=T1_PHASECORR_DISABLED
@@ -393,6 +455,15 @@ void Timer1_FastPWMInit(void){
 	T1_OC1A_OC1B_OutputCTRL(); //define the operation mode of OC1A & OC1B according to the predefined MACROS OC1A_OPMODE & OC1B_OPMODE
 }
 
+
+/**
+ * RETURN     :VOID.
+ * PARAMETER  :VOID.
+ * DESCRIPTION:This function will set timer1 functionality to operate in one of 7 available modes of either Phase Correct PWM or phase and frequency correct
+ * depending on the predefined macro TI_PWM_PHASECORR_OPMODE and it will also set OC1A and OCA1B  pins operation
+ *  mode depending on the predefined OC1A_OPMODE & OC1B_OPMODE MACROS
+ *  Timer1_Enable() will be required to start the timer1 module and Timer0_Stop() to disable it.
+ */
 void Timer1_PhaseCorrPWMInit(void)
 {
 	//confirm that either T1_FASTPWM_OPMODE or TI_PWM_PHASECORR_OPMODE MACROS is set to an operating mode and the other one set to a disabled macro
@@ -444,6 +515,11 @@ void Timer1_PhaseCorrPWMInit(void)
 }
 
 
+/**
+ * RETURN      : VOID
+ * PARAMETER   : CHA_DutyCyclePercentage is f32 variable that represents the required duty cycle for channel A and must have a value between 0.0 -> 100.0
+ * DESCRIPTION : this function is used to set the output's duty cycle of channel A in either fast PWM modes or Phase correct PWM modes
+ */
 void Timer1_CHA_SetPWM_DutyCycle(f32 CHA_DutyCyclePercentage)
 {
 
@@ -508,6 +584,11 @@ void Timer1_CHA_SetPWM_DutyCycle(f32 CHA_DutyCyclePercentage)
 }
 
 
+/**
+ * RETURN      : VOID
+ * PARAMETER   : CHB_DutyCyclePercentage is f32 variable that represents the required duty cycle for channel B and must have a value between 0.0 -> 100.0
+ * DESCRIPTION : this function is used to set the output's duty cycle of channel B in either fast PWM modes or Phase correct PWM modes
+ */
 void Timer1_CHB_SetPWM_DutyCycle(f32 CHB_DutyCyclePercentage)
 {
 
@@ -590,6 +671,19 @@ void Timer1_CHB_SetPWM_DutyCycle(f32 CHB_DutyCyclePercentage)
 }
 
 
+/**
+ * RETURN      : VOID
+ * PARAMETER   : Frequency is u16 variable that represents the required frequency for channel A and channel B
+ * DESCRIPTION : this function is used to set the required frequency for both channel A and channel B in any of the following modes:
+ * T1_PHASECORR_MODE4
+ * T1_PHASECORR_MODE5
+ * T1_PHASE_FREQ_CORR_MODE1
+ * T1_PHASE_FREQ_CORR_MODE2
+ * T1_FASTPWM_MODE4
+ * T1_FASTPWM_MODE5
+ * and will have no effect if being used with any other PWM modes
+ * NOTE        :changing the frequency from a value to another during the operation will adjust the duty cycle automatically to match the predefined value before changing the frequency
+ */
 void Timer1_SetPWN_Freq(u16 Frequency){
 	u16 RequiredCounts=0,PrescalerDIV=0;
 	PrescalerDIV=T1_PrescalerDivisor();
@@ -648,6 +742,7 @@ void Timer1_Stop(void)
 	TCCR1B &=T1_PRESCALER_MASK; //set the prescaler value to zero, stop the timer
 	TCNT1H=0x0; //set timer1 counter high byte to zero
 	TCNT1L=0x0; //set timer1 counter low byte to zero
+	Timer1_OVF_UserFnDisable();
 }
 
 
@@ -664,6 +759,11 @@ static void T1_OVFcounterFunc(void)
 }
 
 
+/**
+ * RETURN : u16 represents the prescaler  value
+ * PARAMETER: VOID
+ * DESCRIPTION : static function that is being used to calculate the prescaler value
+ */
 static u16 T1_PrescalerDivisor(void)
 {
 	u16 Divisor=0;

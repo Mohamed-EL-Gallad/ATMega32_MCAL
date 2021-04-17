@@ -52,6 +52,35 @@ void Timer0_CountDownOverFlows(u16 OverFLowsNo);
 
 
 /**
+ * RETURN      : VOID
+ * PARAMETER   : VOID
+ * DESCRIPTION : this function is used to initiate timer0 as counter , it will count numbers of external falling or rising edges
+ * applied on pin B0 , the edge trigger type can be selected by setting the TIMER0_PRESCALER MACRO to
+ * either EXT_CLK_FALLING "for falling edge trigger" or  EXT_CLK_RISSING "for rising edge trigger"
+ *  Timer0_Enable() will be required to start the timer0 module and Timer0_Stop() to disable it
+ * CAUTION     :this function will force timer0 to operate in normal mode and it will also dictate timer0 overflow interrupt
+ */
+void Timer0_CounterInit(void);
+
+
+/**
+ * RETURN      : u16 variable represents the counter value
+ * PARAMETER   : VOID
+ * DESCRIPTION : this function will return a value represents the number of counts of the signal applied on pin B0
+ */
+u16 Timer0_GetCounterValue(void);
+
+
+/**
+ * RETURN      : VOID
+ * PARAMETER   : VOID
+ * DESCRIPTION : this function is used to reset the counter's value as it will reset the value stored in TCNT0
+ * and will also reset the number of overflows
+ */
+void Timer0_ResetCounter(void);
+
+
+/**
  *  RETURN     :VOID.
  *  PARAMETER  :VOID.
  *  DESCRIPTION:This function will set timer0 functionality to operate in compare match and set OC0 pin operation
@@ -118,12 +147,12 @@ void Timer0_PhaseCorrPWMInit(void);
 
 /**
  * RETURN     :VOID.
- * PARAMETER  :DutyCyclePercentage is a U8 variable represents the required duty cycle will have value from 0 to 100.
+ * PARAMETER  :DutyCyclePercentage is a f32 variable represents the required duty cycle will have value from 0.0 to 100.0.
  * DESCRIPTION:this function will be used to set the PWM duty cycle by a user defined vale equal to DutyCyclePercentage
  * this function can be used in either fast PWM or phase correct PWM.
  * either Timer0_FastPWMInit() or Timer0_PhaseCorrPWMInit() must be used before the use of this function.
  */
-void Timer0_SetPWM_DutyCycle(u8 DutyCyclePercentage);
+void Timer0_SetPWM_DutyCycle(f32 DutyCyclePercentage);
 
 
 /**
@@ -184,6 +213,35 @@ void Timer1_OVF_UserFnDisable(void);
  *  the user Must set Timer1 to operate in normal mode -Timer1_NormalModeInit()- first before using this function.
  */
 void Timer1_CountDownOverFlows(u32 T1_OverFLowsNo);
+
+
+/**
+ * RETURN      : VOID
+ * PARAMETER   : VOID
+ * DESCRIPTION : this function is used to initiate timer1 as counter , it will count numbers of external falling or rising edges
+ * applied on pin B1 , the edge trigger type can be selected by setting the TIMER1_PRESCALER MACRO to
+ * either EXT_CLK_FALLING "for falling edge trigger" OR EXT_CLK_RISSING "for rising edge trigger"
+ *  Timer1_Enable() will be required to start the timer1 module and Timer1_Stop() to disable it
+ * CAUTION     :this function will force timer1 to operate in normal mode and it will also dictate timer1 overflow interrupt
+ */
+void Timer1_CounterInit(void);
+
+
+/**
+ * RETURN      : u32 variable represents the counter value
+ * PARAMETER   : VOID
+ * DESCRIPTION : this function will return a value represents the number of counts of the signal applied on pin B1
+ */
+u32 Timer1_GetCounterValue(void);
+
+
+/**
+ * RETURN      : VOID
+ * PARAMETER   : VOID
+ * DESCRIPTION : this function is used to reset the counter's value as it will reset the value stored in TCNT1H & TCNT1L
+ * and will also reset the number of overflows
+ */
+void Timer1_ResetCounter(void);
 
 
 /**
@@ -341,11 +399,11 @@ void Timer1_CHB_SetPWM_DutyCycle(f32 CHB_DutyCyclePercentage);
  * PARAMETER   : Frequency is u16 variable that represents the required frequency for channel A and channel B
  * DESCRIPTION : this function is used to set the required frequency for both channel A and channel B in any of the following modes:
  * T1_PHASECORR_MODE4
- * T1_PHASECORR_MODE5
+ * T1_PHASECORR_MODE5 ,OC1A will toggle with freq=Frequency/2 and duty cycle=50% when OC1A_OPMODE=OC1A_MODE1
  * T1_PHASE_FREQ_CORR_MODE1
- * T1_PHASE_FREQ_CORR_MODE2
+ * T1_PHASE_FREQ_CORR_MODE2 ,OC1A will toggle with freq=Frequency/2 and duty cycle=50% when OC1A_OPMODE=OC1A_MODE1
  * T1_FASTPWM_MODE4
- * T1_FASTPWM_MODE5
+ * T1_FASTPWM_MODE5 ,OC1A will toggle with freq=Frequency/2 and duty cycle=50% when OC1A_OPMODE=OC1A_MODE1
  * and will have no effect if being used with any other PWM modes
  * NOTE        :changing the frequency from a value to another during the operation will adjust the duty cycle automatically to match the predefined value before changing the frequency
  */

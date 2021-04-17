@@ -12,7 +12,9 @@
 #include "Timers_Interface.h"
 
 #define T0_PRESCALER_MASK 0xF8
+static void T0_OVFcounterFunc(void);
 
+static u8 T0_OVF_Counter;
 static void (*Timer0_OverFlowIntFunc)(); //pointer to a function that points to the function that shall be executed in the case of timer0 overflows
 static void (*Timer0_CompMatchIntFunc)();//pointer to a function that points to the function that shall be executed in the case of timer0 compare match occurrence
 
@@ -24,7 +26,7 @@ static void (*Timer0_CompMatchIntFunc)();//pointer to a function that points to 
  *     mode according to the predefined OC0_OPMODE macro
  *     Timer0_Enable() will be required to start the timer0 module and Timer0_Stop() to disable it
  */
-void Timer0_NormalModeInit()
+void Timer0_NormalModeInit(void)
 {
 	TCCR0 &=~(1<<3 | 1<<6); //enable normal mode operation WGM01=0 WGM00=0
 
@@ -95,13 +97,58 @@ void Timer0_CountDownOverFlows(u16 OverFLowsNo)
 
 
 /**
+ * RETURN      : VOID
+ * PARAMETER   : VOID
+ * DESCRIPTION : this function is used to initiate timer0 as counter , it will count numbers of external falling or rising edges
+ * applied on pin B0 , the edge trigger type can be selected by setting the TIMER0_PRESCALER MACRO to
+ * either EXT_CLK_FALLING "for falling edge trigger" or  EXT_CLK_RISSING "for rising edge trigger"
+ *  Timer0_Enable() will be required to start the timer0 module and Timer0_Stop() to disable it
+ * CAUTION     :this function will force timer0 to operate in normal mode and it will also dictate timer0 overflow interrupt
+ */
+void Timer0_CounterInit(void)
+{
+	Timer0_NormalModeInit(); //force timer0 to operate in normal mode
+	TCCR0 &=~(1<<4 | 1<<5); //COM01=00 COM00=00 disconnect OC0 pin , normal port operation
+	SetPinDIR(1, 0, 0); //define pin B0 "T0"as input
+	SetPinValue(1, 0, 1); //enable internal pull up resistor of pin B0
+	Timer0_ExecuteOnOverFlow(&T0_OVFcounterFunc); //mount the overflow counter function to overflow interrupt
+}
+
+
+/**
+ * RETURN      : u16 variable represents the counter value
+ * PARAMETER   : VOID
+ * DESCRIPTION : this function will return a value represents the number of counts of the signal applied on pin B0
+ */
+u16 Timer0_GetCounterValue(void)
+{
+	u16 NoOfCounts;
+	NoOfCounts=TCNT0+(T0_OVF_Counter*256); //calculate the number of counts and taking in consideration the number of overflows
+    return NoOfCounts;
+}
+
+
+/**
+ * RETURN      : VOID
+ * PARAMETER   : VOID
+ * DESCRIPTION : this function is used to reset the counter's value as it will reset the value stored in TCNT0
+ * and will also reset the number of overflows
+ */
+void Timer0_ResetCounter(void)
+{
+	TCNT0=0; //reset TCNT0 register
+	T0_OVF_Counter=0; //reset the number of overflows
+}
+
+
+/**
  *  RETURN     :VOID
  *  PARAMETER  :VOID
  *  DESCRIPTION:This function will set timer0 functionality to operate in compare match and set OC0 pin operation
  *     mode according to the predefined OC0_OPMODE macro
  *     Timer0_Enable() will be required to start the timer0 module and Timer0_Stop() to disable it
  */
-void Timer0_CTCModeInit()
+void Timer0_CTCModeInit(void)
 {
 
 	//enable CTC mode WGM01=1 WGM00=0
@@ -239,26 +286,19 @@ void Timer0_PhaseCorrPWMInit(void)
 
 /**
  * RETURN     :VOID
- * PARAMETER  :DutyCyclePercentage is a U8 variable represents the required duty cycle will have value from 0 to 100
+ * PARAMETER  :DutyCyclePercentage is a f32 variable represents the required duty cycle will have value from 0 to 100
  * DESCRIPTION:this function will be used to set the PWM duty cycle by a user defined vale equal to DutyCyclePercentage
  *    this function can be used in either fast PWM or phase correct PWM.
  *    either Timer0_FastPWMInit() or Timer0_PhaseCorrPWMInit() must be used before the use of this function
  */
-void Timer0_SetPWM_DutyCycle(u8 DutyCyclePercentage)
+void Timer0_SetPWM_DutyCycle(f32 DutyCyclePercentage)
 {
 	//first define either OC0 pin configured for inverted or non inverted mode
-		u8 OC0_Mode= (TCCR0 >>4) & 0x03; //exclude the values of COM00 & COM01 bits
-		switch(OC0_Mode)
-		{
-		case 2: //OC0 was configured as non inverting mode
+       #if OC0_Mode== OC0_MODE2  //OC0 was configured as non inverting mode
 			OCR0=(255*((f32)DutyCyclePercentage/100));
-			break;
-		case 3: //OC0 was configured as inverted mode
+       #elif OC0_Mode == OC0_MODE3 //OC0 was configured as inverted mode
 			OCR0=255-(255*((f32)DutyCyclePercentage/100));
-			break;
-		default:
-			break;
-		}
+       #endif
 }
 
 
@@ -285,8 +325,20 @@ void Timer0_Stop(void)
 {
 	TCCR0 &=T0_PRESCALER_MASK; //set the prescaler value to zero
 	TCNT0 =0x0; //reset the timer counter to zero
+	Timer0_OVF_UserFncDisable(); //disable the execution of user defined function on overflow
+	Timer0_CompMatch_UserFncDisable(); //disable the execution of user defined function on compare match
 }
 
+
+/**
+ * RETURN      : VOID
+ * PARAMETER   : VOID
+ * DESCRIBTION : static function used to count the number of timer0's overflows
+ */
+static void T0_OVFcounterFunc(void)
+{
+	T0_OVF_Counter++;
+}
 
 
 /**
