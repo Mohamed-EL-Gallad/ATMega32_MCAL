@@ -57,7 +57,7 @@ void Timer0_CountDownOverFlows(u16 OverFLowsNo);
  * DESCRIPTION : this function is used to initiate timer0 as counter , it will count numbers of external falling or rising edges
  * applied on pin B0 , the edge trigger type can be selected by setting the TIMER0_PRESCALER MACRO to
  * either EXT_CLK_FALLING "for falling edge trigger" or  EXT_CLK_RISSING "for rising edge trigger"
- *  Timer0_Enable() will be required to start the timer0 module and Timer0_Stop() to disable it
+ * Timer0_Enable() will be required to start the timer0 module and Timer0_Stop() to disable it
  * CAUTION     :this function will force timer0 to operate in normal mode and it will also dictate timer0 overflow interrupt
  */
 void Timer0_CounterInit(void);
@@ -433,5 +433,138 @@ void Timer1_Enable(void);
 void Timer1_Stop(void);
 
 
+/**-----------------------------------------------------------------------------------------------------------*/
+/*                               TIMER2 INTERFACE FUNCTIONS                                                   */
+/**-----------------------------------------------------------------------------------------------------------*/
+
+/**
+ *  RETURN     :VOID.
+ *  PARAMETER  :VOID
+ *  DESCRIPTION:This function will set timer2 functionality to operate in Normal mode and set OC2 pin operation
+ *  mode according to the predefined OC2_OPMODE MACRO
+ *  Timer2_Enable() will be required to start the timer2 module and Timer2_Stop() to disable it
+ */
+void Timer2_NormalModeInit(void);
+
+
+/**
+ *  RETURN      :VOID
+ *  PARAMETER   :OVF_UserFunction,is pointer to a user defined function that has void return and input parameters
+ *  DESCRIPTION :This function will mount a user defined function to be executed on overflow interrupt
+ */
+void Timer2_ExecuteOnOverFlow(void (*OVF_UserFunction)(void));
+
+
+/**
+ * RETURN      :VOID
+ * PARAMETER   :VOID
+ * DESCRIPTION :this function will disable the execution of the user defined function when overflow interrupt occurs
+ * it will also disable the overflow interrupt
+ */
+void Timer2_OVF_UserFncDisable(void);
+
+
+/**
+ *  RETURN      :VOID
+ *  PARAMETER   :OverFLowsNo is a u16 variable which will contain a number of overflow to be counted down
+ *  DESCRIPTION :This function can be used to halt the normal program execution for a given number of Timer2's overflows
+ *  that is defined by the user
+ *  the user Must set Timer2 to operate in normal mode -Timer2_NormalModeInit()- first before using this function
+ */
+void Timer2_CountDownOverFlows(u16 OverFLowsNo);
+
+
+/**
+ *  RETURN     :VOID
+ *  PARAMETER  :VOID
+ *  DESCRIPTION:This function will set timer2 functionality to operate in compare match and set OC2 pin operation
+ *  mode according to the predefined OC2_OPMODE MACRO
+ *  Timer2_Enable() will be required to start the timer2 module and Timer2_Stop() to disable it
+ */
+void Timer2_CTCModeInit(void);
+
+
+/**
+ * RETURN      :VOID
+ * PARAMETER   :CompMatch_UserFunction is pointer to a user defined function that has void return and input parameters
+ * DESCRIPTION :This function will mount a user defined function to be executed on compare match interrupt
+ */
+void Timer2_ExecuteOnCompMatch(void (*CompMatch_UserFunction)(void));
+
+
+/**
+ *  RETURN      :VOID
+ *  PARAMETER   :VOID
+ *  DESCRIPTION :this function will disable the execution of the user defined function when compare match interrupt occurs
+ *  it will also disable the compare match interrupt
+ */
+void Timer2_CompMatch_UserFncDisable(void);
+
+
+/**
+ *  RETURN     :VOID
+ *  PARAMETER  :CompareMatchValue is a u8 variable , used to set the compare match register value
+ *  DESCRIPTION:This function will set the OCR2 register value to the defined value by the user
+ *  the user Must set Timer2 to operate in CTC mode -Timer2_CTCModeInit()- first before using this function
+ */
+void Timer2_SetCompValue(u8 CompareMatchValue);
+
+
+/**
+ *  RETURN     :VOID
+ *  PARAMETER  :CycleInitValue is a u8 value , used to set a start value for a timer2 current cycle
+ *  DESCRIPTION:this function is used to set a start value equal to CycleInitValue that timer2 will start count from for the current cycle
+ *  this function can be used in any non PWM Mode operation mode
+ */
+void Timer2_CycleStartCountAt(u8 CycleInitValue);
+
+
+/**
+ *  RETURN     :VOID
+ *  PARAMETER  :VOID
+ *  DESCRIPTION:This function will set timer2 functionality to operate in Fast PWM and set OC2 pin operation
+ *  mode according to the predefined OC2_OPMODE MACRO
+ *  Timer2_Enable() will be required to start the timer2 module and Timer2_Stop() to disable it
+ */
+void Timer2_FastPWMInit(void);
+
+
+/**
+ *  RETURN     :VOID
+ *  PARAMETER  :VOID
+ *  DESCRIPTION:This function will set timer2 functionality to operate in Phase Correct PWM and set OC2 pin operation
+ *  mode according to the predefined OC2_OPMODE MACRO
+ *  Timer2_Enable() will be required to start the timer2 module and Timer2_Stop() to disable it
+ */
+void Timer2_PhaseCorrPWMInit(void);
+
+
+/**
+ * RETURN     :VOID
+ * PARAMETER  :DutyCyclePercentage is a f32 variable represents the required duty cycle will have value from 0.0 to 100.0
+ * DESCRIPTION:this function will be used to set the PWM duty cycle by a user defined vale equal to DutyCyclePercentage
+ * this function can be used in either fast PWM or phase correct PWM.
+ * either Timer2_FastPWMInit() or Timer2_PhaseCorrPWMInit() must be used before the use of this function
+ */
+void Timer2_SetPWM_DutyCycle(f32 DutyCyclePercentage);
+
+
+/**
+ * RETURN      :VOID
+ * PARAMETER   :VOID
+ * DESCRIPTION :this function will enable the timer2 module by setting the prescaler value that is defined
+ * by the TIMER2_PRESCALER MACRO , the use of this function is required to start the initiated timer2 functionality
+ */
+void Timer2_Enable(void);
+
+
+/**
+ * RETURN      :VOID
+ * PARAMETER   :VOID
+ * DESCRIPTION :this function will disable timer2 by setting the prescaler value to zero
+ * it will also reset the value of TCNT2 register
+ * it's a good practice to disable the timer if it's no longer needed to save power
+ */
+void Timer2_Stop(void);
 
 #endif /* TIMERS_H_ */
