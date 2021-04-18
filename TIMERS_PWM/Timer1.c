@@ -20,7 +20,7 @@
 
 
 volatile static u32 ICU_TonTicks=0,ICU_ToffTicks=0;
-volatile        u16 T1_OVF_Counter;
+volatile static u16 T1_OVF_Counter;
 volatile static u8 ICU_EdgeFlag=0;
          static f32 T1_CHA_DutyCycle=0;
          static f32 T1_CHB_DutyCycle=0;
