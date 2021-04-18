@@ -11,7 +11,7 @@
 #include "REG_utils.h"
 #include "Timers_Interface.h"
 
-#define T0_PRESCALER_MASK 0xF8
+#define T0_PRESCALER_MASK 0xF8 //exclude the prescaler bits
 static void T0_OVFcounterFunc(void);
 
 static u8 T0_OVF_Counter;
@@ -23,8 +23,8 @@ static void (*Timer0_CompMatchIntFunc)();//pointer to a function that points to 
  *  RETURN     :VOID.
  *  PARAMETER  :VOID
  *  DESCRIPTION:This function will set timer0 functionality to operate in Normal mode and set OC0 pin operation
- *     mode according to the predefined OC0_OPMODE macro
- *     Timer0_Enable() will be required to start the timer0 module and Timer0_Stop() to disable it
+ *  mode according to the predefined OC0_OPMODE macro
+ *  Timer0_Enable() will be required to start the timer0 module and Timer0_Stop() to disable it
  */
 void Timer0_NormalModeInit(void)
 {
@@ -68,7 +68,7 @@ void Timer0_ExecuteOnOverFlow(void (*OVF_UserFunction)(void))
  * RETURN      :VOID
  * PARAMETER   :VOID
  * DESCRIPTION :this function will disable the execution of the user defined function when overflow interrupt occurs
- *    it will also disable the overflow interrupt
+ * it will also disable the overflow interrupt
  */
 void Timer0_OVF_UserFncDisable(void)
 {
@@ -79,10 +79,10 @@ void Timer0_OVF_UserFncDisable(void)
 
 /**
  *  RETURN      :VOID
- *  PARAMETER   :OverFLowsNo is a U16 variable the will have a number of overflow
+ *  PARAMETER   :OverFLowsNo is a u16 variable which will contain a number of overflow to be counted down
  *  DESCRIPTION :This function can be used to halt the normal program execution for a given number of Timer0 overflows
- *     that is defined by the user
- *     the user Must set Timer0 to operate in normal mode -Timer0_NormalModeInit()- first before using this function
+ *  that is defined by the user
+ *  the user Must set Timer0 to operate in normal mode -Timer0_NormalModeInit()- first before using this function
  */
 void Timer0_CountDownOverFlows(u16 OverFLowsNo)
 {
@@ -145,8 +145,8 @@ void Timer0_ResetCounter(void)
  *  RETURN     :VOID
  *  PARAMETER  :VOID
  *  DESCRIPTION:This function will set timer0 functionality to operate in compare match and set OC0 pin operation
- *     mode according to the predefined OC0_OPMODE macro
- *     Timer0_Enable() will be required to start the timer0 module and Timer0_Stop() to disable it
+ *  mode according to the predefined OC0_OPMODE macro
+ *  Timer0_Enable() will be required to start the timer0 module and Timer0_Stop() to disable it
  */
 void Timer0_CTCModeInit(void)
 {
@@ -193,7 +193,7 @@ void Timer0_ExecuteOnCompMatch(void (*CompMatch_UserFunction)(void))
  * RETURN      :VOID
  * PARAMETER   :VOID
  * DESCRIPTION :this function will disable the execution of the user defined function when compare match interrupt occurs
- *    it will also disable the compare match interrupt
+ * it will also disable the compare match interrupt
  */
 void Timer0_CompMatch_UserFncDisable(void)
 {
@@ -206,7 +206,7 @@ void Timer0_CompMatch_UserFncDisable(void)
  *  RETURN     :VOID
  *  PARAMETER  :CompareMatchValue is a U8 variable , used to set the compare match value
  *  DESCRIPTION:This function will set the OCR0 register value to the defined value by the user
- *     the user Must set Timer0 to operate in CTC mode -Timer0_CTCModeInit()- first before using this function
+ *  the user Must set Timer0 to operate in CTC mode -Timer0_CTCModeInit()- first before using this function
  */
 void Timer0_SetCompValue(u8 CompareMatchValue)
 {
@@ -218,7 +218,7 @@ void Timer0_SetCompValue(u8 CompareMatchValue)
  *  RETURN     :VOID
  *  PARAMETER  :CycleInitValue is a U8 value , used to set a start value for a timer0 current cycle
  *  DESCRIPTION:this function is used to set a start value equal to CycleInitValue that timer0 will start count from for the current cycle
- *     this function can be used in any non PWM Mode operation mode
+ *  this function can be used in any non PWM Mode operation mode
  */
 void Timer0_CycleStartCountAt(u8 CycleInitValue)
 {
@@ -230,8 +230,8 @@ void Timer0_CycleStartCountAt(u8 CycleInitValue)
  *  RETURN     :VOID
  *  PARAMETER  :VOID
  *  DESCRIPTION:This function will set timer0 functionality to operate in Fast PWM and set OC0 pin operation
- *     mode according to the predefined OC0_OPMODE macro
- *     Timer0_Enable() will be required to start the timer0 module and Timer0_Stop() to disable it
+ *  mode according to the predefined OC0_OPMODE macro
+ *  Timer0_Enable() will be required to start the timer0 module and Timer0_Stop() to disable it
  */
 void Timer0_FastPWMInit(void)
 {
@@ -258,8 +258,8 @@ void Timer0_FastPWMInit(void)
  *  RETURN     :VOID
  *  PARAMETER  :VOID
  *  DESCRIPTION:This function will set timer0 functionality to operate in Phase Correct PWM and set OC0 pin operation
- *     mode according to the predefined OC0_OPMODE macro
- *     Timer0_Enable() will be required to start the timer0 module and Timer0_Stop() to disable it
+ *  mode according to the predefined OC0_OPMODE macro
+ *  Timer0_Enable() will be required to start the timer0 module and Timer0_Stop() to disable it
  */
 void Timer0_PhaseCorrPWMInit(void)
 {
@@ -288,15 +288,15 @@ void Timer0_PhaseCorrPWMInit(void)
  * RETURN     :VOID
  * PARAMETER  :DutyCyclePercentage is a f32 variable represents the required duty cycle will have value from 0 to 100
  * DESCRIPTION:this function will be used to set the PWM duty cycle by a user defined vale equal to DutyCyclePercentage
- *    this function can be used in either fast PWM or phase correct PWM.
- *    either Timer0_FastPWMInit() or Timer0_PhaseCorrPWMInit() must be used before the use of this function
+ * this function can be used in either fast PWM or phase correct PWM.
+ * either Timer0_FastPWMInit() or Timer0_PhaseCorrPWMInit() must be used before the use of this function
  */
 void Timer0_SetPWM_DutyCycle(f32 DutyCyclePercentage)
 {
 	//first define either OC0 pin configured for inverted or non inverted mode
-       #if OC0_Mode== OC0_MODE2  //OC0 was configured as non inverting mode
+       #if OC0_OPMODE== OC0_MODE2  //OC0 was configured as non inverting mode
 			OCR0=(255*((f32)DutyCyclePercentage/100));
-       #elif OC0_Mode == OC0_MODE3 //OC0 was configured as inverted mode
+       #elif OC0_OPMODE == OC0_MODE3 //OC0 was configured as inverted mode
 			OCR0=255-(255*((f32)DutyCyclePercentage/100));
        #endif
 }
@@ -306,7 +306,7 @@ void Timer0_SetPWM_DutyCycle(f32 DutyCyclePercentage)
  * RETURN      :VOID
  * PARAMETER   :VOID
  * DESCRIPTION :this function will enable the timer0 module by setting the prescaler value that is defined
- *    by the TIMER0_PRESCALER Macro , the use of this function is required to start the initiated timer0 functionality
+ * by the TIMER0_PRESCALER Macro , the use of this function is required to start the initiated timer0 functionality
  */
 void Timer0_Enable(void)
 {
