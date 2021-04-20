@@ -12,7 +12,6 @@
 #include "TimersConfig.h"
 #include "REG_utils.h"
 #include "Timers_Interface.h"
-#include "LCD.h"
 
 #define T1_PRESCALER_MASK 0xF8
 #define HIGH_BYTE_MASK    0xFF00
