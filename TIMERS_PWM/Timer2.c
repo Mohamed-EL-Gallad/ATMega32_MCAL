@@ -25,24 +25,45 @@ static void (*Timer2_CompMatchIntFunc)();//pointer to a function that points to 
  */
 void Timer2_NormalModeInit(void)
 {
-	TCCR2 &=~(1<<3 | 1<<6); //WGM20=0 WGM21=0
+	TCCR2 &=~(1<<3 | 1<<6); //WGM20=0 WGM21=0.
+	        #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+	        while(ASSR & 0xF1);
+            #endif
 
 	 //set the OC2 operation to the required mode depending on the predefined MACRO OC2_OPMODE
      #if   OC2_OPMODE==OC2_MODE0  //OC2 PIN DICONNECTED
 	 TCCR2 &=~(1<<4 | 1<<5); //COM20=0 COM21=0
+            #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+            while(ASSR & 0xF1);
+            #endif
 
      #elif OC2_OPMODE==OC2_MODE1  //TOGGLE ON MATCH
 	 TCCR2 |= (1<<4); //COM20=1
+            #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+            while(ASSR & 0xF1);
+            #endif
 	 TCCR2 &=~(1<<5); //COM21=0
+            #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+            while(ASSR & 0xF1);
+            #endif
 	 SetPinDIR(3, 7, 1); //set OC2-PB7 pin data direction as output
 
      #elif OC2_OPMODE==OC2_MODE2  //CLEAR ON MATCH
 	 TCCR2 &=~(1<<4); //COM20=0
+            #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+            while(ASSR & 0xF1);
+            #endif
 	 TCCR2 |= (1<<5); //COM21=1
+            #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+            while(ASSR & 0xF1);
+            #endif
 	 SetPinDIR(3, 7, 1); //set OC2-PB7 pin data direction as output
 
      #elif OC2_OPMODE==OC2_MODE3  //SET ON MATCH
 	 TCCR2 |=(1<<4 | 1<<5); //COM20=1 COM21=1
+            #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+            while(ASSR & 0xF1);
+            #endif
 	 SetPinDIR(3, 7, 1); //set OC2-PB7 pin data direction as output
 
      #endif
@@ -113,24 +134,48 @@ void Timer2_CTCModeInit(void)
 {
 	//enable CTC mode WGM20=0  WGM21=1
 	TCCR2 &=~(1<<6);  //WGM20=0
+            #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+            while(ASSR & 0xF1);
+            #endif
 	TCCR2 |= (1<<3);  //WGM21=1
+            #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+            while(ASSR & 0xF1);
+            #endif
 
 	//set the OC2 pin functionality
     #if   OC2_OPMODE==OC2_MODE0  //OC2 PIN DICONNECTED
     TCCR2 &=~(1<<4 | 1<<5); //COM20=0 COM21=0
+            #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+            while(ASSR & 0xF1);
+            #endif
 
     #elif OC2_OPMODE==OC2_MODE1  //TOGGLE ON MATCH
     TCCR2 |= (1<<4); //COM20=1
+            #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+            while(ASSR & 0xF1);
+            #endif
     TCCR2 &=~(1<<5); //COM21=0
+            #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+            while(ASSR & 0xF1);
+            #endif
     SetPinDIR(3, 7, 1); //set OC2-PB7 pin data direction as output
 
     #elif OC2_OPMODE==OC2_MODE2  //CLEAR ON MATCH
     TCCR2 &=~(1<<4); //COM20=0
+            #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+            while(ASSR & 0xF1);
+            #endif
     TCCR2 |= (1<<5); //COM21=1
+            #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+            while(ASSR & 0xF1);
+            #endif
     SetPinDIR(3, 7, 1); //set OC2-PB7 pin data direction as output
 
     #elif OC2_OPMODE==OC2_MODE3  //SET ON MATCH
     TCCR2 |=(1<<4 | 1<<5); //COM20=1 COM21=1
+            #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+            while(ASSR & 0xF1);
+            #endif
     SetPinDIR(3, 7, 1); //set OC2-PB7 pin data direction as output
 
     #endif
@@ -180,6 +225,9 @@ void Timer2_CompMatch_UserFncDisable(void)
 void Timer2_SetCompValue(u8 CompareMatchValue)
 {
 	OCR2=CompareMatchValue; //set a compare match value
+    #ifdef ASYNCHRONOUS_CLK //in case of asynchronous clk ,wait till OCR2 busy flag is cleared
+	while (ASSR & 0xF2);
+    #endif
 }
 
 
@@ -192,6 +240,9 @@ void Timer2_SetCompValue(u8 CompareMatchValue)
 void Timer2_CycleStartCountAt(u8 CycleInitValue)
 {
 	TCNT2=CycleInitValue; //set the counting start value for the current timer cycle
+    #ifdef ASYNCHRONOUS_CLK //in case of asynchronous clk ,wait till TCNT2 busy flag is cleared
+    while (ASSR & 0xF4);
+    #endif
 }
 
 
@@ -206,22 +257,42 @@ void Timer2_FastPWMInit(void)
 {
 	//enable fast PWM mode WGM20=1  WGM21=1
 	TCCR2 |= (1<<6 | 1<<3);  //WGM20=0 WGM21=1
-
+            #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+            while(ASSR & 0xF1);
+            #endif
 	//set the OC2 pin functionality
     #if   OC2_OPMODE==OC2_MODE0  //OC2 PIN DICONNECTED
     TCCR2 &=~(1<<4 | 1<<5); //COM20=0 COM21=0
+            #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+            while(ASSR & 0xF1);
+            #endif
 
     #elif OC2_OPMODE==OC2_MODE1  //reserved
     TCCR2 |= (1<<4); //COM20=1
+            #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+            while(ASSR & 0xF1);
+            #endif
     TCCR2 &=~(1<<5); //COM21=0
+            #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+            while(ASSR & 0xF1);
+            #endif
 
     #elif OC2_OPMODE==OC2_MODE2  //Clear OC2 on compare match, set OC2 at TOP
     TCCR2 &=~(1<<4); //COM20=0
-    TCCR2 |= (1<<5); //COM21=1
+            #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+            while(ASSR & 0xF1);
+            #endif
+    TCCR2 |= (1<<5); //COM21=1.
+           #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+           while(ASSR & 0xF1);
+           #endif
     SetPinDIR(3, 7, 1); //set OC2-PB7 pin data direction as output
 
     #elif OC2_OPMODE==OC2_MODE3  //Set OC2 on compare match, clear OC2 at TOP
     TCCR2 |=(1<<4 | 1<<5); //COM20=1 COM21=1
+            #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+            while(ASSR & 0xF1);
+            #endif
     SetPinDIR(3, 7, 1); //set OC2-PB7 pin data direction as output
 
     #endif
@@ -239,23 +310,47 @@ void Timer2_PhaseCorrPWMInit(void)
 {
 	//enable phase correct PWM mode WGM20=1  WGM21=0
 	TCCR2 |= (1<<6);  //WGM20=0
+            #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+            while(ASSR & 0xF1);
+            #endif
 	TCCR2 &=~(1<<3);  //WGM21=1
+            #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+            while(ASSR & 0xF1);
+            #endif
 
 	//set the OC2 pin functionality
     #if   OC2_OPMODE==OC2_MODE0  //OC2 PIN DICONNECTED
     TCCR2 &=~(1<<4 | 1<<5); //COM20=0 COM21=0
+            #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+            while(ASSR & 0xF1);
+            #endif
 
     #elif OC2_OPMODE==OC2_MODE1  //reserved
     TCCR2 |= (1<<4); //COM20=1
+            #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+            while(ASSR & 0xF1);
+            #endif
     TCCR2 &=~(1<<5); //COM21=0
+            #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+            while(ASSR & 0xF1);
+            #endif
 
     #elif OC2_OPMODE==OC2_MODE2  //Clear OC2 on compare match when up-counting. Set OC2 on compare match when downcounting.
     TCCR2 &=~(1<<4); //COM20=0
+            #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+            while(ASSR & 0xF1);
+            #endif
     TCCR2 |= (1<<5); //COM21=1
+            #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+            while(ASSR & 0xF1);
+            #endif
     SetPinDIR(3, 7, 1); //set OC2-PB7 pin data direction as output
 
     #elif OC2_OPMODE==OC2_MODE3  //Set OC2 on compare match when up-counting. Clear OC2 on compare match when downcounting.
     TCCR2 |=(1<<4 | 1<<5); //COM20=1 COM21=1
+            #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+            while(ASSR & 0xF1);
+            #endif
     SetPinDIR(3, 7, 1); //set OC2-PB7 pin data direction as output
 
     #endif
@@ -274,8 +369,16 @@ void Timer2_SetPWM_DutyCycle(f32 DutyCyclePercentage)
 	//first define either OC2 pin configured for inverted or non inverted mode
        #if OC2_OPMODE== OC2_MODE2  //OC0 was configured as non inverting mode
 			OCR2=(255*((f32)DutyCyclePercentage/100));
+            #ifdef ASYNCHRONOUS_CLK //in case of asynchronous clk ,wait till OCR2 busy flag is cleared
+            while (ASSR & 0xF2);
+            #endif
+
        #elif OC2_OPMODE == OC2_MODE3 //OC0 was configured as inverted mode
 			OCR2=255-(255*((f32)DutyCyclePercentage/100));
+            #ifdef ASYNCHRONOUS_CLK //in case of asynchronous clk ,wait till OCR2 busy flag is cleared
+            while (ASSR & 0xF2);
+            #endif
+
        #endif
 }
 
@@ -288,6 +391,10 @@ void Timer2_SetPWM_DutyCycle(f32 DutyCyclePercentage)
  */
 void Timer2_Enable(void)
 {
+    #ifdef ASYNCHRONOUS_CLK //if timer2 clocked by external watch crystal
+	ASSR |=(1<<3); //set AS2 bit
+    #endif
+
 	TCCR2 |=(TCCR2 & T2_PRESCALER_MASK)|TIMER2_PRESCALER; //set the prescaler value depending on the predefined MACRO TIMER2_PRESCALER
 }
 
@@ -301,7 +408,14 @@ void Timer2_Enable(void)
  */
 void Timer2_Stop(void){
 	TCCR2 &=T2_PRESCALER_MASK; //set the prescaler value to zero
+             #ifdef ASYNCHRONOUS_CLK //in case of Asynchronous CLK wait till TCCR2 busy flag cleared
+             while(ASSR & 0xF1);
+             #endif
+
 	TCNT2 =0x0; //reset the timer counter to zero
+            #ifdef ASYNCHRONOUS_CLK //in case of asynchronous clk ,wait till TCNT2 busy flag is cleared
+            while (ASSR & 0xF4);
+            #endif
 }
 
 /**

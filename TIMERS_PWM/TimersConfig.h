@@ -19,8 +19,10 @@
  *                                                  6-TIMER1- CHANNEL_B COMPARE MATCH OUTPUT SETTINGS
  *                                                  7-Input Capture Settings
  *
- *  TIMER2 CONFIGURATIONS section is used to select 1-Timer2's Prescaler
- *                                                  2-OC2 operating mode
+ *  TIMER2 CONFIGURATIONS section is used to select 1-Timer2's Clock source selection "Asynchronous or Synchronous CLK"
+ *                                                  2-Timer2's Prescaler
+ *                                                  3-OC2 operating mode
+ *
  */
 
 #ifndef TIMERSCONFIG_H_
@@ -243,6 +245,14 @@
 /*                                      TIMER2 CONFIGURATIONS                                                 */
 /**-----------------------------------------------------------------------------------------------------------*/
 
+                            /*------------------------------*/
+                            /** TIMER2 CLOCK SOURCE SELECT **/
+                            /*------------------------------*/
+//by default timer2 will operate using Synchronous clk source unless the following macro is being uncommented
+
+#define ASYNCHRONOUS_CLK     //external asynchronous clock source "32.768 kHz watch crystal on TOSC1,2 pins"
+
+
                               /*---------------------------*/
                               /** TIMER2 PRESCALER SELECT **/
                               /*---------------------------*/
@@ -258,7 +268,7 @@
 
 
                             /*----------------------------------------*/
-                            /** TIMER0 COMPARE MATCH OUTPUT SETTINGS **/
+                            /** TIMER2 COMPARE MATCH OUTPUT SETTINGS **/
                             /*----------------------------------------*/
  /*----------------*----------------*----------------*--------------------------*---------------------------*
   | OPERATION      |OC2 MODE0       |OC2 MODE1       |OC2 MODE2                 |OC2 MODE3                  |
@@ -279,7 +289,7 @@
 #define OC2_MODE2   2
 #define OC2_MODE3   3
 
-#define OC2_OPMODE OC2_MODE2 //select your preferred OC2 operation mode
+#define OC2_OPMODE OC2_MODE1 //select your preferred OC2 operation mode
 
 
 #endif /* TIMERSCONFIG_H_ */
