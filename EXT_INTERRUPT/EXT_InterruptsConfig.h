@@ -20,7 +20,7 @@
 
 #define INT0_TRIG_TYPE   RISING_EDGE //this macro will define the logical trigger required to trigger INT0
 
-#define INT1_TRIG_TYPE   FALLING_EDGE //this macro will define the logical trigger required to trigger INT1
+#define INT1_TRIG_TYPE   RISING_EDGE //this macro will define the logical trigger required to trigger INT1
 
 /**************************************************************************************************************/
 

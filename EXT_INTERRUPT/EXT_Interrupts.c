@@ -158,7 +158,7 @@ void Disable_INT2(void)
 /**
  *  INT0 ISR
  */
-void __vector_1 (void) __attribute__ ((signal,used));//disable optimization for this function
+void __vector_1 (void) __attribute__ ((signal,used,interrupt));//disable optimization for this function , define it as external interrupt
 void __vector_1 (void) //INT0 interrupt vector no
 {
 	INT0_CallBackFN(); //execute the user's function when the INT0 triggers
@@ -168,7 +168,7 @@ void __vector_1 (void) //INT0 interrupt vector no
 /**
  *  INT1 ISR
  */
-void __vector_2 (void) __attribute__ ((signal,used));//disable optimization for this function
+void __vector_2 (void) __attribute__ ((signal,used,interrupt));//disable optimization for this function, define it as external interrupt
 void __vector_2 (void) //INT1 interrupt vector no
 {
 	INT1_CallBackFN(); //execute the user's function when the INT1 triggers
@@ -178,7 +178,7 @@ void __vector_2 (void) //INT1 interrupt vector no
 /**
  *  INT2 ISR
  */
-void __vector_3 (void) __attribute__ ((signal,used));//disable optimization for this function
+void __vector_3 (void) __attribute__ ((signal,used,interrupt));//disable optimization for this function, define it as external interrupt
 void __vector_3 (void) //INT2 interrupt vector no
 {
 	INT2_CallBackFN(); //execute the user's function when the INT2 triggers
