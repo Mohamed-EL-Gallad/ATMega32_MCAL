@@ -15,8 +15,8 @@
 static void T0_OVFcounterFunc(void);
 
 static u8 T0_OVF_Counter;
-static void (*Timer0_OverFlowIntFunc)(); //pointer to a function that points to the function that shall be executed in the case of timer0 overflows
-static void (*Timer0_CompMatchIntFunc)();//pointer to a function that points to the function that shall be executed in the case of timer0 compare match occurrence
+static void (*Timer0_OverFlowIntFunc)(void)=NULL; //pointer to a function that points to the function that shall be executed in the case of timer0 overflows
+static void (*Timer0_CompMatchIntFunc)(void)=NULL;//pointer to a function that points to the function that shall be executed in the case of timer0 compare match occurrence
 
 
 /**

@@ -13,8 +13,8 @@
 
 #define T2_PRESCALER_MASK 0xF8 //exclude the prescaler bits
 
-static void (*Timer2_OverFlowIntFunc)(); //pointer to a function that points to the function that shall be executed in the case of timer0 overflows
-static void (*Timer2_CompMatchIntFunc)();//pointer to a function that points to the function that shall be executed in the case of timer0 compare match occurrence
+static void (*Timer2_OverFlowIntFunc)(void)=NULL; //pointer to a function that points to the function that shall be executed in the case of timer0 overflows
+static void (*Timer2_CompMatchIntFunc)(void)=NULL;//pointer to a function that points to the function that shall be executed in the case of timer0 compare match occurrence
 
 /**
  *  RETURN     :VOID.

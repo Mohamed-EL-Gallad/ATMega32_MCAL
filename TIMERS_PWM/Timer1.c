@@ -14,7 +14,7 @@
 #include "Timers_Interface.h"
 
 #define T1_PRESCALER_MASK 0xF8
-#define HIGH_BYTE_MASK    0xFF00
+#define HIGH_BYTE_MASK    0xFF00 //clear the first 2 bytes of a 16bites variable
 #define  LOW_BYTE_MASK    0x00FF
 
 
@@ -24,9 +24,9 @@ volatile static u8 ICU_EdgeFlag=0;
          static f32 T1_CHA_DutyCycle=0;
          static f32 T1_CHB_DutyCycle=0;
 
-static void      (*Timer1_OverFlowIntFunc)();
-static void (*Timer1_CHA_CompMatchIntFunc)();
-static void (*Timer1_CHB_CompMatchIntFunc)();
+static void      (*Timer1_OverFlowIntFunc)(void)=NULL;
+static void (*Timer1_CHA_CompMatchIntFunc)(void)=NULL;
+static void (*Timer1_CHB_CompMatchIntFunc)(void)=NULL;
 
 static void T1_OC1A_OC1B_OutputCTRL(void);
 static void T1_OVFcounterFunc      (void);
