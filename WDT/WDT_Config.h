@@ -5,7 +5,9 @@
  *  Author: Mohamed_EL_Gallad
  *  Brief : This file will contain the required setting to configure the WDT to reset the MCU depending on the chosen reset interval
  *  the intervals can be selected by setting the WDT_RESET_INTERVAL MACRO to one of the predefined reset interval MACROS
- *
+ */
+
+/*
  *  The following MACROS represent the typical reset time intervals at VCC = 5.0V
  */
 
