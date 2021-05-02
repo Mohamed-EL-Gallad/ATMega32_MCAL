@@ -8,6 +8,7 @@
 #include "Mega32_reg.h"
 #include "AVR_EEPROM.h"
 
+
 #define EEPROM_MAX_ADDRESSES 1024 //EEPROM available addresses from 0 to 1023
 
 
