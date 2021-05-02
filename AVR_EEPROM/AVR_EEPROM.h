@@ -4,6 +4,7 @@
  *
  *  Created on: 01/05/2021
  *  Author: Mohamed_EL_Gallad
+ *  Brief : This file contains the interface functions for the Atmega32 internal EEPRPOM
  */
 
 #ifndef AVR_EEPROM_H_

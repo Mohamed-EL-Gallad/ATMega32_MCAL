@@ -5,6 +5,7 @@
  *
  *  Created on: 01/05/2021
  *  Author: Mohamed_EL_Gallad
+ *  Brief : This file will contain EEPROM functions implementation
  */
 #include "STD_types.h"
 #include "Mega32_reg.h"
