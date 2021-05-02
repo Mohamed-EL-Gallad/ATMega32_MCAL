@@ -20,6 +20,7 @@ void Enable_WDT(void)
 {
 	WDTCR |=(1<<3); //WDE=1 enable WDT
 	WDTCR |=((WDTCR & 0xF8) | ((u8)WDT_RESET_INTERVAL)); //define the required reset interval
+
 }
 
 
