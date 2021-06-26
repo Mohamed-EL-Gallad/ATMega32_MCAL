@@ -6,7 +6,7 @@ Description : This file will contain the errors MACROS .
 #ifndef _CIRCULARBUFFERPRIVATE_H_
 #define _CIRCULARBUFFERPRIVATE_H_
 
-#include "STD_types.h"
+
 //if the buffer is full the CBuffer_PushData function should return the following MACROS 
 #define ERROR_BUFFER_FULL     (u8)0x01
 

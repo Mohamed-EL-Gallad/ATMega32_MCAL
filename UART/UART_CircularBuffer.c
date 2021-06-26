@@ -4,9 +4,13 @@ Author: Mohamed EL-Gallad
 Description : This file will contain the functions implementation for the circular buffer lib.
 */
 
-
-#include "UART_CircularBuffer.h"
 #include "STD_types.h"
+#include "UART_Config.h"
+#include "UART_CircularBufferConfig.h"
+#include "UART_CircularBufferPrivate.h"
+#include "UART_CircularBuffer.h"
+
+
 
 /*******************************************************************************************************
 RETURN     : VOID
@@ -74,7 +78,7 @@ PARAMETERS :Buffer ,is A pointer to the Circular Buffer instance
            :DataPtr is a pointer to BuffData_t varialbe that will contain the popped value out of the buffer 
 DESCRIPTION:this function is used to pop data out of the buffer and store it in a variable that DataPtr pointer points at.
 *******************************************************************************************************/
-u8 CBuffer_PopData(CircularBuffer* Buffer, BuffData_t *DataPtr)
+u8 CBuffer_PopData(CircularBuffer* Buffer,  BuffData_t *DataPtr)
 {
 	//PopDataError will hold the error value either ERROR_BUFFER_EMPTY or SUCCESSFUL_OPERATION
 	u8 PopDataError;

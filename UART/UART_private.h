@@ -15,8 +15,9 @@
 #define PARITY_ERROR    ((u8)0x16)
 #define DATA_OVER_RUN   ((u8)0x17)
 
+
 //UBRRH bits
-#define URSEL ((u8)7)
+#define URSEL (7)
 
 //UCSRC bits0
 #define UMSEL ((u8)6)
@@ -46,5 +47,16 @@
 #define UCSZ2  ((u8)2)
 #define RXB8   ((u8)1)
 #define TXB8   ((u8)0)
+
+/*
+  UARTData_t MACRO will define the data type of the data to be sent and received  "depending on the frame size"
+  if frame size is < 9bits then BuffData_t will be defined as u8  variable
+  if frame size is = 9bits then BuffData_t will be defined as u16 variable
+*/
+#if FRAME_SIZE == _9_BITS_FRAME
+#define UARTData_t   u16
+#else
+#define UARTData_t   u8
+#endif
 
 #endif /* UART_PRIVATE_H_ */

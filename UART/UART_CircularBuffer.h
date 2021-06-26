@@ -8,10 +8,6 @@ Description : This header file will contain interface functions for the Circular
 #define _CIRCULARBUFFER_H_
 
 
-#include "UART_CircularBufferConfig.h"
-#include "UART_CircularBufferPrivate.h"
-#include "STD_types.h"
-
 /*******************************************************************************************************
 CircularBuffer : is a struct that is being used to create a CircularBuffer instance .
 NOTE : all the created Buffers will have the size equals to BUFFER_SIZE MACROS

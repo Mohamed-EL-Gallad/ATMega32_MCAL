@@ -8,6 +8,8 @@
 #ifndef UART_CONFIG_H_
 #define UART_CONFIG_H_
 
+
+
 #define CPU_FREQ  ((u32)12000000)  //user has to define the CPU operating frequency
 #define BAUD_RATE ((u32)9600) //baud rate value
 
@@ -30,7 +32,7 @@
 #define _6_BITS_FRAME  1
 #define _7_BITS_FRAME  2
 #define _8_BITS_FRAME  3
-#define _9_BITS_FRAME  8
+#define _9_BITS_FRAME  4
 
 #define FRAME_SIZE   _8_BITS_FRAME
 
@@ -38,7 +40,7 @@
 
 #define TX_RX_BUFFER_SIZE  ((u8)10)
 #define NODE_TRANSMIT_DATA ENABLE
-#define NODE_RECEIVE_DATA  ENABLE
+#define NODE_RECEIVE_DATA  DISABLE
 
 
 #define SINGLE_STOP_BIT 0
@@ -51,7 +53,7 @@
 #define    ODD_PARITY   2
 #define   EVEN_PARITY   3
 
-#define PARITY_MODE   ODD_PARITY
+#define PARITY_MODE   NO_PARITY_CHK
 
 
 #define MPCM_MASTER_NODE
