@@ -11,10 +11,10 @@ Description : This file will contain the errors MACROS .
 #define ERROR_BUFFER_FULL     (u8)0x01
 
 //if the buffer is empty the CBuffer_PopData function should return the following MACROS 
-#define ERROR_BUFFER_EMPTY    (u8)0x02
+#define ERROR_BUFFER_EMPTY    (u8)0x06
 
 //when a successful operation is performed by either CBuffer_PushData or CBuffer_PopData they should return the following MACROS
-#define SUCCESSFUL_OPERATION  (u8)0x03
+#define SUCCESSFUL_OPERATION  (u8)0x07
 
 //the following MACROS is used as boolean return values for CBuffer_IsTheBufferFull and CBuffer_IsTheBufferEmpty
 #ifndef TRUE

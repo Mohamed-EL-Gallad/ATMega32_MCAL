@@ -15,8 +15,13 @@
 #include "UART_CircularBufferPrivate.h"
 #include "UART_CircularBuffer.h"
 
+#include "LCD.h"
+
 #if NODE_RECEIVE_DATA==ENABLE
  CircularBuffer RX_Buffer; //create a receiver buffer
+  #if FRAME_SIZE != _9_BITS_FRAME
+  CircularBuffer RX_ErrorBuffer;  //create a buffer to store the error corresponding to each frame
+  #endif
 #endif
 
 #if NODE_TRANSMIT_DATA==ENABLE
@@ -142,7 +147,12 @@ void UART_init(void)
 
    #if NODE_RECEIVE_DATA==ENABLE
 	CBuffer_BufferInit(& RX_Buffer); //initiate the receiver buffer
+      #if FRAME_SIZE != _9_BITS_FRAME
+	  CBuffer_BufferInit(&RX_ErrorBuffer); //initiate the receiver's error buffer
+      #endif
 	SetRegisterBit(UCSRB,RXEN); //Receiver Enable
+	SetRegisterBit(SREG, 7); //enable global interrupt
+	SetRegisterBit(UCSRB ,RXCIE); //RX Complete Interrupt Enable
    #endif
 
 }
@@ -150,21 +160,32 @@ void UART_init(void)
 
 void UART_SendDataFrame(UARTData_t SendData,u8 *ErrorCode)
 {
-
 	*ErrorCode = CBuffer_PushData(&TX_Buffer,SendData);
 	if(*ErrorCode == SUCCESSFUL_OPERATION)
 	{
 	    SetRegisterBit(SREG, 7); //enable global interrupt
 	    SetRegisterBit(UCSRB ,UDRIE); //USART Data Register Empty Interrupt Enable
 	}
-
 }
 
 
-u8 UART_ReceiveDataFrame(UARTData_t ReceivedData)
+u8 UART_ReceiveDataFrame(UARTData_t *ReceivedData)
 {
-	SetRegisterBit(SREG, 7); //enable global interrupt
-	SetRegisterBit(UCSRB ,RXCIE); //RX Complete Interrupt Enable
+  u8 ErrorValue=0;
+  #if FRAME_SIZE == _9_BITS_FRAME
+  u16 DataAndErrorFrame=0;
+  CBuffer_PopData(&RX_Buffer, &DataAndErrorFrame);
+  *ReceivedData =DataAndErrorFrame & 0x01FF;
+  ErrorValue = ((u8)((DataAndErrorFrame & 0xE000)>>13));
+  #else
+  u8 Data=0;
+  CBuffer_PopData(&RX_Buffer,  &Data);
+  *ReceivedData=Data;
+  CBuffer_PopData(&RX_ErrorBuffer,&ErrorValue);
+  #endif
+
+  return ErrorValue;
+
 }
 
 
@@ -194,6 +215,9 @@ void UART_ReceiverStop(void)
 	ClearRegisterBit(UCSRB,RXCIE);//Disable RX Complete Interrupt
 	ClearRegisterBit(UCSRB,RXEN); //Disable Receiver
 	CBuffer_BufferReset(& RX_Buffer); //Clear the RX buffer
+    #if FRAME_SIZE != _9_BITS_FRAME
+	CBuffer_BufferReset(&RX_ErrorBuffer); //Clear the RX error buffer
+    #endif
 #endif
 }
 
@@ -219,6 +243,18 @@ void __vector_14 (void)
     if(!CBuffer_IsTheBufferEmpty(&TX_Buffer))
     {
     	CBuffer_PopData(&TX_Buffer, &TX_Data);
+       #if(FRAME_SIZE == _9_BITS_FRAME)
+    	{
+    	 if (TX_Data & 0x100 ) //check if the ninth bit in the TX_data=1 if so set TXB8 to 1
+    	  {
+    	  SetRegisterBit(UCSRB,TXB8); //set the TXB8 to 1
+    	  }
+    	 else
+    	  {
+    	  ClearRegisterBit(UCSRB,TXB8); //clear the ninth bit
+    	  }
+    	}
+       #endif
     	UDR=TX_Data;
     }
     else
@@ -233,6 +269,29 @@ void __vector_14 (void)
 void __vector_13 (void) __attribute__ ((signal,used));
 void __vector_13 (void)
 {
+	volatile u8 FrameErrorLog=0;
+	volatile UARTData_t RX_Data=0;
+
+	FrameErrorLog = ((GetRegisterBit(UCSRA,PE)<<PE) | (GetRegisterBit(UCSRA,DOR)<<DOR) | (GetRegisterBit(UCSRA,FE)<<FE)) >> 2;
+  #if FRAME_SIZE == _9_BITS_FRAME
+	RX_Data =GetRegisterBit(UCSRB,TXB8)<<8;
+  #endif
+	RX_Data = UDR;
+
+  #if FRAME_SIZE ==_9_BITS_FRAME
+	RX_Data |=FrameErrorLog <<13;
+  #else
+    CBuffer_PushData(&RX_ErrorBuffer, FrameErrorLog);
+  #endif
+
+  if(!CBuffer_IsTheBufferFull(&RX_Buffer))
+  {
+   CBuffer_PushData(&RX_Buffer, RX_Data);
+  }
+  else
+  {
+	  //noop
+  }
 
 }
 #endif

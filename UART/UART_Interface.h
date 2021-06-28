@@ -8,13 +8,12 @@
 #ifndef UART_INTERFACE_H_
 #define UART_INTERFACE_H_
 
-//#include "UART_private.h"
 
 void UART_init(void);
 
 void UART_SendDataFrame(UARTData_t SendData,u8 *ErrorCode);
 
-u8 UART_ReceiveDataFrame(UARTData_t ReceivedData);
+u8 UART_ReceiveDataFrame(UARTData_t *ReceivedData);
 
 void UART_TransmitterStop(void);
 

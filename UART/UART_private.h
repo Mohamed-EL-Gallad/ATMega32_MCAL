@@ -11,15 +11,15 @@
 
 
 
-#define FRAME_ERROR     ((u8)0x15)
-#define PARITY_ERROR    ((u8)0x16)
-#define DATA_OVER_RUN   ((u8)0x17)
+#define FRAME_ERROR     ((u8)0x04)
+#define PARITY_ERROR    ((u8)0x02)
+#define DATA_OVER_RUN   ((u8)0x03)
 
 
 //UBRRH bits
 #define URSEL (7)
 
-//UCSRC bits0
+//UCSRC bits
 #define UMSEL ((u8)6)
 #define UPM1  ((u8)5)
 #define UPM0  ((u8)4)
@@ -47,6 +47,8 @@
 #define UCSZ2  ((u8)2)
 #define RXB8   ((u8)1)
 #define TXB8   ((u8)0)
+
+
 
 /*
   UARTData_t MACRO will define the data type of the data to be sent and received  "depending on the frame size"
