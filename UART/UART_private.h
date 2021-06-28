@@ -10,11 +10,11 @@
 #define UART_PRIVATE_H_
 
 
-
+/*
 #define FRAME_ERROR     ((u8)0x04)
 #define PARITY_ERROR    ((u8)0x02)
 #define DATA_OVER_RUN   ((u8)0x03)
-
+*/
 
 //UBRRH bits
 #define URSEL (7)

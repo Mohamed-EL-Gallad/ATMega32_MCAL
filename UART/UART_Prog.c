@@ -173,15 +173,28 @@ u8 UART_ReceiveDataFrame(UARTData_t *ReceivedData)
 {
   u8 ErrorValue=0;
   #if FRAME_SIZE == _9_BITS_FRAME
-  u16 DataAndErrorFrame=0;
-  CBuffer_PopData(&RX_Buffer, &DataAndErrorFrame);
-  *ReceivedData =DataAndErrorFrame & 0x01FF;
-  ErrorValue = ((u8)((DataAndErrorFrame & 0xE000)>>13));
+   u16 DataAndErrorFrame=0;
+   if(!CBuffer_IsTheBufferEmpty(&RX_Buffer))
+    {
+      CBuffer_PopData(&RX_Buffer, &DataAndErrorFrame);
+      *ReceivedData =DataAndErrorFrame & 0x01FF;
+       ErrorValue = ((u8)((DataAndErrorFrame & 0xE000)>>13));
+     }
+   else
+     {
+	  ErrorValue = ERROR_BUFFER_EMPTY;
+     }
   #else
-  u8 Data=0;
-  CBuffer_PopData(&RX_Buffer,  &Data);
-  *ReceivedData=Data;
-  CBuffer_PopData(&RX_ErrorBuffer,&ErrorValue);
+
+   if(!CBuffer_IsTheBufferEmpty(&RX_Buffer))
+   {
+      CBuffer_PopData(&RX_Buffer, ReceivedData);
+      CBuffer_PopData(&RX_ErrorBuffer,&ErrorValue);
+   }
+   else
+   {
+   	  ErrorValue = ERROR_BUFFER_EMPTY;
+   }
   #endif
 
   return ErrorValue;

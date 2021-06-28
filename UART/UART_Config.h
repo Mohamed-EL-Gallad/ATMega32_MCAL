@@ -34,7 +34,7 @@
 #define _8_BITS_FRAME  3
 #define _9_BITS_FRAME  4
 
-#define FRAME_SIZE   _9_BITS_FRAME
+#define FRAME_SIZE   _8_BITS_FRAME
 
 
 
