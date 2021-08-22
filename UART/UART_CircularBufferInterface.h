@@ -13,10 +13,10 @@ CircularBuffer : is a struct that is being used to create a CircularBuffer insta
 NOTE : all the created Buffers will have the size equals to BUFFER_SIZE MACROS
 *******************************************************************************************************/
 typedef struct {
-    volatile BuffData_t data[BUFFER_SIZE];
-    volatile BuffData_t *headptr;
-    volatile BuffData_t *tailptr;
-    u8 AvailablePosition;
+	volatile  BuffData_t data[BUFFER_SIZE];
+	volatile  BuffData_t *headptr;
+	volatile BuffData_t *tailptr;
+	volatile u8 AvailablePosition;
 }CircularBuffer;
 
 

@@ -8,7 +8,7 @@ Description : This file will contain the functions implementation for the circul
 #include "UART_Config.h"
 #include "UART_CircularBufferConfig.h"
 #include "UART_CircularBufferPrivate.h"
-#include "UART_CircularBuffer.h"
+#include "UART_CircularBufferInterface.h"
 
 
 

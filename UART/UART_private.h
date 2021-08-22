@@ -4,20 +4,17 @@
  *  Created on: 30/6/2021
  *  Author: Mohamed EL-Gallad
  *
+ *  Brief: This file will contain UART private Macros "DON'T CHANGE ANY VALUE EXISTS IN THIS FILE"
  */
 
 #ifndef UART_PRIVATE_H_
 #define UART_PRIVATE_H_
 
 
-/*
-#define FRAME_ERROR     ((u8)0x04)
-#define PARITY_ERROR    ((u8)0x02)
-#define DATA_OVER_RUN   ((u8)0x03)
-*/
+
 
 //UBRRH bits
-#define URSEL (7)
+#define URSEL ((u8)7)
 
 //UCSRC bits
 #define UMSEL ((u8)6)

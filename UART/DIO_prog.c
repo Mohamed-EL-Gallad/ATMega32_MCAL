@@ -5,7 +5,6 @@
  *      Author: Mohamed_EL_Gallad
  */
 #include "DIO_interface.h"
-#include "STD_types.h"
 #include "Mega32_reg.h"
 
 
@@ -272,7 +271,4 @@ void TogglePin(u8 PortNum , u8 PinNum)
 
 	}
 }
-
-
-
 

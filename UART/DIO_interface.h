@@ -1,18 +1,33 @@
 /*
- * DIO.h
+ * REG_utils.h
  *
- *  Created on: ??�/??�/????
- *      Author: spider
+ *  Created on: ٢٨‏/١٢‏/٢٠٢٠
+ *      Author: Mohamed_EL_Gallad
  */
-#ifndef DIO_H_
-#define DIO_H_
-#include "std_types.h"
 
-void DIO_vidSetPortDirection(u8 u8PortCpy , u8 u8DirectionCpy);
-void DIO_vidSetPortValue(u8 u8PortCpy , u8 u8ValueCpy);
-u8 DIO_u8GetPortValue(u8 u8PortCpy);
-void DIO_vidSetPinDirection(u8 u8PortCpy , u8 u8PinCpy , u8 u8DirCpy);
-void DIO_vidSetPinValue(u8 u8PortCpy , u8 u8PinCpy , u8 u8ValueCpy);
-u8 DIO_u8GetPinValue(u8 u8PortCpy,u8 u8PinCpy);
+#ifndef DIO_INTERFACE_H_
+#define DIO_INTERFACE_H_
+#include "STD_types.h"
+void SetPortDIR(u8 PortNum, u8 DIR) ;
 
-#endif /* DIO_H_ */
+
+u8 GetPortValue(u8 PortNum);
+
+
+void SetPortValue(u8 PortNum,u8 Value);
+
+
+u8 GetPortValue(u8 PortNum);
+
+
+void SetPinDIR(u8 PortNum,u8 PIN_Num,u8 DIR);
+
+
+void SetPinValue(u8 PortNum,u8 PIN_Num,u8 PIN_Value);
+
+
+u8 GetPinValue(u8 PortNum, u8 PIN_Num);
+
+
+void TogglePin(u8 PortNum , u8 PinNum);
+#endif /* DIO_INTERFACE_H_ */
