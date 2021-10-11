@@ -104,4 +104,14 @@
 #define UCSRB    (*((volatile u8*)0x2A))
 #define UBRRL    (*((volatile u8*)0x29))
 
+
+/*----------------------------------------------------------------------
+ *               SPI registers
+ ---------------------------------------------------------------------*/
+#define SPCR     (*((volatile u8*)0x2D))
+#define SPSR     (*((volatile u8*)0x2E))
+#define SPDR     (*((volatile u8*)0x2F))
+
+
+
 #endif /* MEGA32_REG_H_ */

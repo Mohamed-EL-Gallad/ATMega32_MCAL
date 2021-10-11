@@ -17,13 +17,7 @@ Description : This file will contain the errors MACROS .
 #define SUCCESSFUL_OPERATION  (u8)0x17
 
 //the following MACROS is used as boolean return values for CBuffer_IsTheBufferFull and CBuffer_IsTheBufferEmpty
-#ifndef TRUE
-#define TRUE   (u8)1
-#endif
 
-#ifndef FALSE
-#define FALSE  (u8)0
-#endif
 
 
 #endif

@@ -6,6 +6,9 @@ Description : This header file will contain interface functions for the Circular
 
 #ifndef _CIRCULARBUFFER_H_
 #define _CIRCULARBUFFER_H_
+#include "CircularBufferConfig.h"
+#include "CircularBufferPrivate.h"
+
 
 
 /*******************************************************************************************************
