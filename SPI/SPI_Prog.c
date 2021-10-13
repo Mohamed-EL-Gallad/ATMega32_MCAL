@@ -237,8 +237,8 @@ u8 SPI_SlaveReadByteFromRXBuffer(u8 *ReceiveData)
  * Transmit complete interrupt is used only in case the node is configured as slave
  */
 #if SPI_OPERATION_MODE == SLAVE_NODE
-void __vector_10 (void) __attribute__ ((signal,used));
-void __vector_10 (void)
+void __vector_12 (void) __attribute__ ((signal,used));
+void __vector_12 (void)
 {
 
 	u8 SPDR_Data; //temporary storage to store the received data
