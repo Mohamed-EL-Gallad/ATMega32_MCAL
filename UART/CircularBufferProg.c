@@ -3,12 +3,8 @@ Date: 12/06/2021
 Author: Mohamed EL-Gallad
 Description : This file will contain the functions implementation for the circular buffer lib.
 */
-
 #include "STD_types.h"
-#include "UART_Config.h"
-#include "UART_CircularBufferConfig.h"
-#include "UART_CircularBufferPrivate.h"
-#include "UART_CircularBufferInterface.h"
+#include "CircularBufferInterface.h"
 
 
 

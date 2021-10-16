@@ -24,13 +24,25 @@ typedef double f64;
 
 typedef float f32; //define a float data type - 32 bit
 
-#define TRUE   1
-#define FALSE   0
+#ifndef TRUE
+#define TRUE     ((u8)(1))
+#endif
 
+#ifndef TRUE
+#define FALSE    ((u8)(0))
+#endif
+
+#ifndef ENABLE
 #define ENABLE   1
-#define DISABLE  0
+#endif
 
-#define NULL ((void *)0)
+#ifndef DISABLE
+#define DISABLE  0
+#endif
+
+#ifndef NULL
+#define NULL   ((void *)0)
+#endif
 
 
 #endif /* STD_TYPES_H_ */

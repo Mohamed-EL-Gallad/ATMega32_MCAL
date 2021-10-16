@@ -3,7 +3,11 @@
  * Created on: 08/05/2021
  * Author: Mohamed_EL_Gallad
  *
- * Brief : This file contain the configuration required to control the behavior of the UART Module this configurations are:
+ * CAUTION : 1-IN CASE THIS MODULE IS USED ALONGSID ETHE SPI MODULE UN-COMMENT THE INCLUSION OF SPI_Config.h IN CircularBufferConfig.h
+ *           2-IN CASE THIS MODULE IS USED ALONGSIDE THE SPI MODULE THE FRAME_SIZE MACRO MUST BE CONFIGURED TO BE 8BIT OR LESS
+ *
+ *
+ *  Brief : This file contain the configuration required to control the behavior of the UART Module this configurations are:
  *  1- The baud rate value
  *     By setting the value of the BAUD_RATE Macros the user can set the desired baud rate , but before that
  *     the user MUST define the CPU operating frequency this can be done by setting the value of CPU_FREQ Macros
@@ -73,7 +77,7 @@
 #define        MASTER_SYNCHRONOUS_UART   2
 #define         SLAVE_SYNCHRONOUS_UART   3
 
-#define OPERATION_MODE   NORMAL_ASYNCHRONOUS_UART
+#define UART_OPERATION_MODE   NORMAL_ASYNCHRONOUS_UART
 /**************************************************************************************************************/
 
 
@@ -90,6 +94,7 @@
 /*--------------------------------------------------------------------------------------------------------------
  *                                   FRAME SIZE SETTING
  -------------------------------------------------------------------------------------------------------------*/
+// If this module is used alongside the SPI module the FRAME_SIZE macro must be configured to be 8bits or less //
 #define _5_BITS_FRAME  0
 #define _6_BITS_FRAME  1
 #define _7_BITS_FRAME  2
@@ -104,7 +109,9 @@
  *                               TX & RX FUNCTIONALITY CONTROL
  *                                TX & RX BUFFER SIZE SETTING
  -------------------------------------------------------------------------------------------------------------*/
+#ifndef TX_RX_BUFFER_SIZE
 #define TX_RX_BUFFER_SIZE  ((u8)10) //TX & RX buffer size control "Number of available locations in buffer"
+#endif
 #define NODE_TRANSMIT_DATA ENABLE   //change to DISABLE Macros to disable the transmitter functionality
 #define NODE_RECEIVE_DATA  ENABLE   //change to DISABLE Macros to disable the receiver functionality
 /**************************************************************************************************************/
