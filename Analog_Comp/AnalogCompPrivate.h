@@ -3,6 +3,7 @@
  *
  *  Created on:17/10/2021
  *  Author: Mohamed_EL_Gallad
+ *  Description: This file will contain the Analog Comparator private Macros "DON'T CHANGE ANY VALUE EXISTS IN THIS FILE"
  */
 
 #ifndef ANALOGCOMPPRIVATE_H_

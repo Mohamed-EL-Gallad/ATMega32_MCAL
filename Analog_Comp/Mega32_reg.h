@@ -1,8 +1,8 @@
 /*
  * Mega32_reg.h
  *
- *  Created on: ٢٧‏/١٢‏/٢٠٢٠
- *      Author: Mohamed_EL_Gallad
+ *  Created on: 27/12/2021
+ *  Author: Mohamed_EL_Gallad
  */
 #include "STD_types.h"
 
