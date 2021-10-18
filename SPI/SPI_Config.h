@@ -8,6 +8,17 @@
  *  Author: Mohamed_EL_Gallad
  *  Description :This file will contain all the configuration related to the SPI module
  *  	1- Node operation mode either Master or Slave
+ *  	   1-1- If the node configured as Master the user has to set the following configurations
+ *  	        A- Master frequency by setting the SPI_MASTER_FREQ to one of the predefined Macros
+ *  	        B- Select to either enable or disable the double speed mode
+ *  	        C- The selection of the clock phase and polarity
+ *  	        D- The value of the Dummy packet by setting the macro DUMMY_PACKET to the desired value
+ *  	        E- The order of data transmission to be either LSB or MSB first
+ *
+ *  	   1-2- If the node configured as Slave the user has to set the following configurations
+ *  	   		A- The size of the TX and RX buffers by setting the value of the macro TX_RX_BUFFER_SIZE
+ *  	   		NOTE: this macro is shared with the UART module so if both module is used at the same time
+ *  	   		the value of that macro must be the same in both modules
  */
 
 #ifndef SPI_CONFIG_H_
