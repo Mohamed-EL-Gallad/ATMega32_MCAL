@@ -1,8 +1,9 @@
 /*
- * ADC_Private.h
- *
+ *  ADC_Private.h
  *  Created on: 18/10/2021
  *  Author: Mohamed_EL_Gallad
+ *  Description: This file will contain Macros for the ADC registers bits and MACROS for input channel and gain selections
+ *  DON'T CHANGE ANYTHING IN THIS FILE
  */
 
 #ifndef ADC_PRIVATE_H_

@@ -1,8 +1,8 @@
 /*
- * ADC_Prog.c
- *
+ *  ADC_Prog.c
  *  Created on:18/10/2021
  *  Author:Mohamed_EL_Gallad
+ *  Description : this file will contain the functions implementation for the ADC module
  */
 #include "STD_types.h"
 #include "Mega32_reg.h"
@@ -11,10 +11,20 @@
 
 #define ADMUX_CHANNEL_BITS_MASK  ((u8)0XE0) //this Macro is used to clear the ADC channel selection bits
 
-static void (*ADC_ConvCompISR_PTR)(void)=NULL;
-volatile static u16 ADC_ConversionRes=0;
-volatile static u8 NewDataStoredFlg=FALSE;
+static void (*ADC_ConvCompISR_PTR)(void)=NULL; //static pointer to store the address of the user's function to be executed on ADC interrupt
+volatile static u16 ADC_ConversionRes=0; // a variable to store the ADC conversion result
+volatile static u8 NewDataStoredFlg=FALSE; // a flag that will indicate that a new conversion result is ready to be read
 
+
+/**
+ * RETURN     : VOID
+ * PARAMETERS : VOID
+ * DESCRIPTION: This function is used to initiate the ADC module and will set the following configurations
+ * 			1-ADC Voltage reference
+ * 			2-ADC Conversion result adjustment "right or left adjustment"
+ * 			3-ADC mode of operation and trigger source
+ * 			4-ADC prescaler value
+ */
 void ADC_Init (void)
 {
 	//ADC voltage reference selection
@@ -111,10 +121,14 @@ void ADC_Init (void)
 		SetRegisterBit(ADCSRA , ADPS1);   //ADPS1=1
 		SetRegisterBit(ADCSRA , ADPS2);   //ADPS2=1
 	#endif
-
 }
 
 
+/**
+ * RETURN     : VOID
+ * PARAMETERS : VOID
+ * DESCRIPTION: This function is used to enable the ADC module and the ADC conversion complete interrupt
+ */
 void ADC_Enable(void)
 {
 	SetRegisterBit(SREG,7); //ensure that global interrupt is enabled
@@ -123,18 +137,69 @@ void ADC_Enable(void)
 }
 
 
+/**
+ * RETURN     : VOID
+ * PARAMETERS : VOID
+ * DESCRIPTION: This function is used to disable the ADC module and will also disable the ADC conversion complete interrupt
+ */
 void ADC_Disable(void)
 {
 	ClearRegisterBit(ADCSRA , ADEN); // ADEN=0 , Disable ADC
 	ClearRegisterBit(ADCSRA , ADIE); //Disable ADC conversion complete ISR
 }
 
+
+/**
+ * RETURN     : VOID
+ * PARAMETERS : VOID
+ * DESCRIPTION: This function is used to start the ADC conversion and it has to be used in the following cases:
+ *		1- in case a single mode is used , it has to be called every time a conversion is needed and before the call of ADC_GetConvResult() function
+ *		2- in case free running mode ,it must be called once to start conversion and start the free running mode
+ */
 void ADC_StartConversion(void)
 {
 	SetRegisterBit(ADCSRA , ADSC); // ADSC=1 , ADC Start Conversion
 }
 
 
+/**
+ * RETURN     : VOID
+ * PARAMETERS : A u8 variable equals to a predefined MACROS represent the different combinations of channels and gains
+ * DESCRIPTION: this function is used to select the input channel and gain depending on the passed MACRO by the user and it has to be one of the following:
+ * 	   	 MUX0_SE_ADC0                   //Single ended input on ADC0
+ *	 	 MUX1_SE_ADC1                   //Single ended input on ADC1
+ *	 	 MUX2_SE_ADC2                   //Single ended input on ADC2
+ *		 MUX3_SE_ADC3                   //Single ended input on ADC3
+ *		 MUX4_SE_ADC4                   //Single ended input on ADC4
+ *		 MUX5_SE_ADC5                   //Single ended input on ADC5
+ *   	 MUX6_SE_ADC6                   //Single ended input on ADC6
+ *	 	 MUX7_SE_ADC7                   //Single ended input on ADC7
+ *		 MUX8_DIFF_PADC0_NADC0_G10X     //Differential ,Positive input on ADC0 , Negative input on ADC0 , Gain 10x
+ *	 	 MUX9_DIFF_PADC1_NADC0_G10X     //Differential ,Positive input on ADC1 , Negative input on ADC0 , Gain 10x
+ *		 MUX10_DIFF_PADC0_NADC0_G200X   //Differential ,Positive input on ADC0 , Negative input on ADC0 , Gain 200x
+ *	 	 MUX11_DIFF_PADC1_NADC0_G200X   //Differential ,Positive input on ADC1 , Negative input on ADC0 , Gain 200x
+ *	 	 MUX12_DIFF_PADC2_NADC2_G10X    //Differential ,Positive input on ADC2 , Negative input on ADC2 , Gain 10x
+ *	     MUX13_DIFF_PADC3_NADC2_G10X    //Differential ,Positive input on ADC3 , Negative input on ADC2 , Gain 10x
+ *	     MUX14_DIFF_PADC2_NADC2_G200X   //Differential ,Positive input on ADC2 , Negative input on ADC2 , Gain 200x
+ *	 	 MUX15_DIFF_PADC3_NADC2_G200X   //Differential ,Positive input on ADC3 , Negative input on ADC2 , Gain 200x
+ *	 	 MUX16_DIFF_PADC0_NADC1_G1X     //Differential ,Positive input on ADC0 , Negative input on ADC1 , Gain 1x
+ *	 	 MUX17_DIFF_PADC1_NADC1_G1X     //Differential ,Positive input on ADC1 , Negative input on ADC1 , Gain 1x
+ *	 	 MUX18_DIFF_PADC2_NADC1_G1X     //Differential ,Positive input on ADC2 , Negative input on ADC1 , Gain 1x
+ *	 	 MUX19_DIFF_PADC3_NADC1_G1X     //Differential ,Positive input on ADC3 , Negative input on ADC1 , Gain 1x
+ *	 	 MUX20_DIFF_PADC4_NADC1_G1X     //Differential ,Positive input on ADC4 , Negative input on ADC1 , Gain 1x
+ *	 	 MUX21_DIFF_PADC5_NADC1_G1X     //Differential ,Positive input on ADC5 , Negative input on ADC1 , Gain 1x
+ *	 	 MUX22_DIFF_PADC6_NADC1_G1X     //Differential ,Positive input on ADC6 , Negative input on ADC1 , Gain 1x
+ *	 	 MUX23_DIFF_PADC7_NADC1_G1X     //Differential ,Positive input on ADC7 , Negative input on ADC1 , Gain 1x
+ *	 	 MUX24_DIFF_PADC0_NADC2_G1X     //Differential ,Positive input on ADC0 , Negative input on ADC2 , Gain 1x
+ *	 	 MUX25_DIFF_PADC1_NADC2_G1X     //Differential ,Positive input on ADC1 , Negative input on ADC2 , Gain 1x
+ *	 	 MUX26_DIFF_PADC2_NADC2_G1X     //Differential ,Positive input on ADC2 , Negative input on ADC2 , Gain 1x
+ *	 	 MUX27_DIFF_PADC3_NADC2_G1X     //Differential ,Positive input on ADC3 , Negative input on ADC2 , Gain 1x
+ *	 	 MUX28_DIFF_PADC4_NADC2_G1X     //Differential ,Positive input on ADC4 , Negative input on ADC2 , Gain 1x
+ *		 MUX29_DIFF_PADC5_NADC2_G1X     //Differential ,Positive input on ADC5 , Negative input on ADC2 , Gain 1x
+ *	 	 MUX30_VBG_1V22                 //Single ended input = Vbandgap 1.22V
+ *	 	 MUX31_GND                      //Single ended input =GND
+ *
+ */
 void ADC_SelectChanelAndGain(u8 MuxValue)
 {
 	/*To change the ADC channel in a safe manner and ensure that the upcoming conversion will be related to the selected channel:
@@ -142,7 +207,7 @@ void ADC_SelectChanelAndGain(u8 MuxValue)
 	 * 2-clear the last conversion value
 	 * 3-change the ADC channel
 	 * 4-return the ADC to it's previous state
-	 * 5-If the ADC previous state was running then call ADC_StartConversion after Re-Enable the ADC*/
+	 * 5-If the ADC mode was free running mode then call ADC_StartConversion after Re-Enable the ADC*/
 
 	u8 ADC_RunStateFlg=FALSE; //a flag to indicate the ADC running state before calling ADC_SelectChanelAndGain function
 	if(GetRegisterBit(ADCSRA , ADEN))
@@ -291,20 +356,32 @@ void ADC_SelectChanelAndGain(u8 MuxValue)
 	if(ADC_RunStateFlg) //Re-Enable the ADC if it was Enabled before calling this function
 	{
 	ADC_Enable(); //Re-Enable ADC
-	ADC_StartConversion(); //start a new ADC conversion
+	#if ADC_OPERATION_MODE == FREE_RUNNING_MODE
+	ADC_StartConversion(); //in case free running mode is being used , re-initiate the conversion .
+	#endif
 	}
 
 }
 
 
+/**
+ * RETURN     : A u16 variable that will contain the result of the ADC conversion
+ * PARAMETERS : VOID
+ * DESCRIPTION: The call of this function will return the result of the ADC conversion
+ */
 u16 ADC_GetConvResult(void)
 {
-	while(!NewDataStoredFlg); //wait till the current conversion is completed
-	NewDataStoredFlg=FALSE;
+	while(!NewDataStoredFlg); //wait till the conversion result is stored in ADC_ConversionRes variable
+	NewDataStoredFlg=FALSE;   //set the flag value to FALSE to indicate that there is no new conversion result stored.
 	return ADC_ConversionRes; //return the ADC conversion result
 }
 
 
+/**
+ * RETURN     : VOID
+ * PARAMETERS : A pointer to the user's function witch must have a void return and void parameter
+ * DESCRIPTION: This function is used to mount the user's function on the ADC conversion complete interrupt to be executed when it occurs
+ */
 void ADC_ExecuteUserFnOnInterrupt(void (*ADC_ConvComp)(void))
 {
 	if(ADC_ConvComp)
@@ -314,12 +391,20 @@ void ADC_ExecuteUserFnOnInterrupt(void (*ADC_ConvComp)(void))
 }
 
 
+/**
+ * RETURN     : VOID
+ * PARAMETERS : VOID
+ * DESCRIPTION: This function is used to unmount the user's function from the ADC conversion complete interrupt
+ */
 void ADC_DisableUserFN(void)
 {
 	ADC_ConvCompISR_PTR= NULL;  //unmount the user's function by setting the ADC_ConvCompISR_PTR to NULL
 }
 
 
+/**
+ *  ADC conversion complete interrupt
+ */
 void __vector_16 (void) __attribute__ ((signal,used));
 void __vector_16 (void)
 {
@@ -331,11 +416,11 @@ void __vector_16 (void)
 	ADC_ConversionRes |=(ADCH<<8);//read the reset 2bits from ADCH
 	#endif
 
-	NewDataStoredFlg=TRUE;
+	NewDataStoredFlg=TRUE; //set the flag value to TRUE to indicate that a new conversion result is ready to be read
 
 	if(ADC_ConvCompISR_PTR)
 	{
-		ADC_ConvCompISR_PTR(); //execute user's function on ADC conversion complete interrupt
+		ADC_ConvCompISR_PTR(); //execute user's function when ADC conversion complete interrupt occurs
 	}
 }
 
